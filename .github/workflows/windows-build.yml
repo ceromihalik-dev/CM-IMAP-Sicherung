@@ -11,6 +11,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build CM IMAP Sicherung
@@ -35,7 +38,7 @@ jobs:
 
           Get-Item $exe | Format-List Name,Length,LastWriteTime
 
-      - name: Release-Paket vorbereiten
+      - name: Windows-Paket vorbereiten
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force "artifact" | Out-Null
@@ -50,10 +53,44 @@ jobs:
             Copy-Item "CHANGELOG.md" "artifact\CHANGELOG.md"
           }
 
-      - name: Windows-Paket hochladen
+          if (Test-Path "RELEASE-NOTES-1.4.0.1.txt") {
+            Copy-Item `
+              "RELEASE-NOTES-1.4.0.1.txt" `
+              "artifact\RELEASE-NOTES.txt"
+          }
+
+      - name: Actions-Artefakt hochladen
         uses: actions/upload-artifact@v4
         with:
           name: CM-IMAP-Sicherung-Windows
           path: artifact
           if-no-files-found: error
           retention-days: 30
+
+      - name: Release-ZIP erzeugen
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $zip = "CM-IMAP-Sicherung-$tag-Windows.zip"
+
+          Compress-Archive `
+            -Path "artifact\*" `
+            -DestinationPath $zip `
+            -CompressionLevel Optimal
+
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+
+          "$hash  $zip" |
+            Set-Content "$zip.sha256" -Encoding ASCII
+
+          Write-Host "Release-Paket: $zip"
+          Write-Host "SHA-256: $hash"
+
+      - name: Release-Dateien hochladen
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            CM-IMAP-Sicherung-${{ github.ref_name }}-Windows.zip
+            CM-IMAP-Sicherung-${{ github.ref_name }}-Windows.zip.sha256
