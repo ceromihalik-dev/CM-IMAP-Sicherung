@@ -1,0 +1,45 @@
+# Visual Studio / .NET build output
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local application settings / secrets
+*.cred
+config.xml
+*.pwd
+*.secret
+*.secrets
+
+# Backup data - NEVER commit real mailboxes
+*.mbox
+*.mbx
+*.eml
+_Logs/
+_Archive/
+_RestoreTemp/
+IMAP-Backup/
+Backups/
+Backup/
+
+# Generated archives / releases
+*.zip
+*.7z
+*.rar
+
+# Local caches / indexes
+*.db
+*.db-shm
+*.db-wal
+MboxViewerIndex/
+
+# OS / editor
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+*.bak
+~$*

@@ -1,0 +1,12 @@
+CM IMAP Sicherung 1.4.0.1
+=========================
+
+Enthalten:
+- automatische IMAP-Erkennung
+- grafische Überarbeitung der Oberfläche
+- Backup-Prüfung
+- verschlüsseltes ZIP
+- Large-Mailbox-Optimierungen
+
+Nicht enthalten:
+- keine Wiederherstellungsfunktion in der Oberfläche

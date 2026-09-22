@@ -1,0 +1,59 @@
+name: Windows Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build CM IMAP Sicherung
+    runs-on: windows-latest
+
+    steps:
+      - name: Quellcode auschecken
+        uses: actions/checkout@v4
+
+      - name: Build starten
+        shell: cmd
+        run: echo.|call Build-Release.bat
+
+      - name: EXE pruefen
+        shell: powershell
+        run: |
+          $exe = "CMIMAPSicherung\bin\Release\CM IMAP Sicherung.exe"
+
+          if (-not (Test-Path $exe)) {
+            throw "CM IMAP Sicherung.exe wurde nicht erzeugt."
+          }
+
+          Get-Item $exe | Format-List Name,Length,LastWriteTime
+
+      - name: Release-Paket vorbereiten
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force "artifact" | Out-Null
+
+          Copy-Item `
+            "CMIMAPSicherung\bin\Release\CM IMAP Sicherung.exe" `
+            "artifact\CM IMAP Sicherung.exe"
+
+          Copy-Item "README.md" "artifact\README.md"
+
+          if (Test-Path "CHANGELOG.md") {
+            Copy-Item "CHANGELOG.md" "artifact\CHANGELOG.md"
+          }
+
+      - name: Windows-Paket hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: CM-IMAP-Sicherung-Windows
+          path: artifact
+          if-no-files-found: error
+          retention-days: 30

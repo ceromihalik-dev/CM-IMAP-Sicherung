@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AD166B29-1B96-4E02-9AAD-7BE9703F884D}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>CMIMAPSicherung</RootNamespace>
+    <AssemblyName>CM IMAP Sicherung</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ApplicationIcon>Resources\cm_logo.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Models.cs" />
+    <Compile Include="MainForm.cs" />
+    <Compile Include="AccountEditForm.cs" />
+    <Compile Include="UiTheme.cs" />
+    <Compile Include="RestoreForm.cs" />
+    <Compile Include="MboxViewerForm.cs" />
+    <Compile Include="ImapAutoDetect.cs" />
+    <Compile Include="ImapBackupCompatibility.cs" />
+    <Compile Include="HistoryForm.cs" />
+    <Compile Include="PasswordForm.cs" />
+    <Compile Include="SchedulerForm.cs" />
+    <Compile Include="SettingsForm.cs" />
+    <Compile Include="InfoForm.cs" />
+    <Compile Include="GlobalHistoryForm.cs" />
+    <Compile Include="TaskSchedulerManager.cs" />
+    <Compile Include="BackupTools.cs" />
+    <Compile Include="AdvancedToolsForm.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\cm_logo.png">
+      <LogicalName>CMIMAPSicherung.Resources.cm_logo.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\cm_logo.ico">
+      <LogicalName>CMIMAPSicherung.Resources.cm_logo.ico</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
