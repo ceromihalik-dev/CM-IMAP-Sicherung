@@ -10,6 +10,9 @@ from __future__ import annotations
 import base64
 import contextlib
 import datetime as dt
+from email import policy
+from email.parser import BytesHeaderParser
+from email.utils import parsedate_to_datetime
 import hashlib
 import imaplib
 import json
@@ -146,32 +149,129 @@ def search_uids(client, *criteria):
     return sorted(uids)
 
 
-def snapshot(client, account, cutoff, cancel=None):
+
+DATE_MODES = ('internal', 'header', 'compare')
+MAX_DATE_HEADER = 65536
+
+def validate_mode(value):
+    if value not in DATE_MODES:
+        raise ArchiveError('Unbekannte Datumsgrundlage. Keine Archivierung gestartet.')
+    return value
+
+def parse_header_date(data):
+    """Read exactly one RFC 5322 Date header; invalid/ambiguous/future dates are excluded."""
+    if not isinstance(data, bytes) or len(data) > MAX_DATE_HEADER:
+        return None
+    try:
+        parsed = BytesHeaderParser(policy=policy.default).parsebytes(data, headersonly=True)
+        values = parsed.get_all('Date') or []
+        if len(values) != 1 or getattr(values[0], 'defects', []):
+            return None
+        moment = parsedate_to_datetime(str(values[0]))
+        if moment.tzinfo is None or moment.utcoffset() is None:
+            return None
+        day = moment.date()
+        if day.year < 1900 or day > dt.date.today() + dt.timedelta(days=1):
+            return None
+        return day.isoformat()
+    except (ValueError, OverflowError, TypeError, IndexError, UnicodeError):
+        return None
+
+def header_date(client, uid):
+    """Fetch only Date header without setting \Seen; never download full message here."""
+    data = require_ok(client.uid('FETCH', str(uid), '(UID BODY.PEEK[HEADER.FIELDS (DATE)])'), 'Datum-Header')
+    found = []
+    for item in data or []:
+        if not isinstance(item, tuple) or len(item) != 2 or not isinstance(item[1], bytes):
+            continue
+        uid_match = re.search(rb'\bUID (\d+)\b', item[0])
+        if not uid_match or int(uid_match[1]) != uid:
+            raise ArchiveError('Unklare UID-Antwort beim Datum-Header.')
+        found.append(item[1])
+    if len(found) != 1:
+        raise ArchiveError('Datum-Header nicht eindeutig abrufbar.')
+    return parse_header_date(found[0])
+
+def eml_header_date(path):
+    """Read only a bounded header prefix from an archived EML, never a whole giant file."""
+    with Path(path).open('rb') as f:
+        raw = f.read(MAX_DATE_HEADER)
+    if b'\r\n\r\n' not in raw and b'\n\n' not in raw:
+        return None
+    return parse_header_date(raw)
+
+
+def selected_date(record, mode, cutoff):
+    """Return chosen date and reasons for conservative exclusion."""
+    internal = record['date']
+    header = record.get('header_date')
+    if mode == 'internal':
+        return (internal if internal < cutoff else None, None)
+    if not header:
+        return None, 'invalid'
+    if mode == 'header':
+        return (header if header < cutoff else None, None)
+    # Comparison mode never selects conflicting classifications.
+    if (internal < cutoff) != (header < cutoff):
+        return None, 'conflict'
+    return (internal if internal < cutoff else None, None)
+
+def snapshot(client, account, cutoff, cancel=None, date_mode='internal'):
+    date_mode = validate_mode(date_mode)
     cutoff_date = dt.date.fromisoformat(cutoff)
     if cutoff_date >= dt.date.today():
         raise ArchiveError('Der Stichtag muss in der Vergangenheit liegen.')
     query_date = '%02d-%s-%04d' % (cutoff_date.day, MONTHS[cutoff_date.month - 1], cutoff_date.year)
     folders = parse_list(require_ok(client.list(), 'Ordnerliste'))
     plan = dict(format=FORMAT, account_key=account_key(account), cutoff=cutoff,
-                folders=[], count=0, bytes=0, first=None, last=None)
+                date_mode=date_mode, folders=[], count=0, bytes=0, first=None, last=None,
+                examined=0, invalid_dates=0, disagreements=0, conflicts=0)
     for folder in folders:
         check_cancel(cancel)
         validity = select_folder(client, folder)
-        uids = search_uids(client, 'BEFORE', query_date, 'UNDELETED')
+        # HEADER/COMPARE need all non-deleted UIDs, not merely IMAP BEFORE.
+        # BEFORE uses INTERNALDATE and would silently hide older imported mail.
+        uids = (search_uids(client, 'BEFORE', query_date, 'UNDELETED')
+                if date_mode == 'internal' else search_uids(client, 'UNDELETED'))
         records = []
+        stats = dict(examined=0, selected=0, invalid_dates=0, disagreements=0, conflicts=0)
         for uid in uids:
             check_cancel(cancel)
             record = metadata(client, uid)
-            if record['date'] >= cutoff or '\\Deleted' in record['flags']:
-                raise ArchiveError('Suchergebnis widerspricht dem Stichtag oder Loeschstatus.')
+            if '\\Deleted' in record['flags']:
+                raise ArchiveError('Nachricht bereits als geloescht markiert.')
+            if date_mode != 'internal':
+                record['header_date'] = header_date(client, uid)
+            chosen, reason = selected_date(record, date_mode, cutoff)
+            stats['examined'] += 1
+            plan['examined'] += 1
+            if date_mode != 'internal':
+                h = record['header_date']
+                if not h:
+                    plan['invalid_dates'] += 1
+                    stats['invalid_dates'] += 1
+                elif abs((dt.date.fromisoformat(h) - dt.date.fromisoformat(record['date'])).days) > 1:
+                    plan['disagreements'] += 1
+                    stats['disagreements'] += 1
+            if reason == 'conflict':
+                plan['conflicts'] += 1
+                stats['conflicts'] += 1
+            if chosen is None:
+                continue
+            record['selected_date'] = chosen
             records.append(record)
+            stats['selected'] += 1
             plan['count'] += 1
             plan['bytes'] += record['size']
-            plan['first'] = min(plan['first'] or record['date'], record['date'])
-            plan['last'] = max(plan['last'] or record['date'], record['date'])
+            plan['first'] = min(plan['first'] or chosen, chosen)
+            plan['last'] = max(plan['last'] or chosen, chosen)
         plan['folders'].append(dict(name=folder, label=decode_mailbox(folder),
                                     uidvalidity=validity, messages=records))
-        emit('progress', message='Ordner geprueft: ' + decode_mailbox(folder), count=plan['count'], bytes=plan['bytes'])
+        emit('progress', message='Ordner geprueft: ' + decode_mailbox(folder) +
+             ' | ausgewaehlt: ' + str(stats['selected']) + ' / ' + str(stats['examined']) +
+             ' | ungueltig: ' + str(stats['invalid_dates']) +
+             ' | widerspruechlich: ' + str(stats['conflicts']),
+             count=plan['count'], bytes=plan['bytes'])
     plan['plan_id'] = plan_id(plan)
     return plan
 
@@ -250,8 +350,8 @@ def locked(root):
         path.unlink(missing_ok=True)
 
 
-def archive(client, account, cutoff, destination, expected_plan=None, cancel=None):
-    plan = snapshot(client, account, cutoff, cancel)
+def archive(client, account, cutoff, destination, expected_plan=None, cancel=None, date_mode='internal'):
+    plan = snapshot(client, account, cutoff, cancel, date_mode=date_mode)
     if expected_plan and plan['plan_id'] != expected_plan:
         raise ArchiveError('Das Postfach hat sich seit der Vorschau geaendert. Bitte Vorschau erneut ausfuehren.')
     if not plan['count']:
@@ -265,7 +365,7 @@ def archive(client, account, cutoff, destination, expected_plan=None, cancel=Non
     root = dest / name
     root.mkdir(exist_ok=False)
     manifest = dict(format=FORMAT, archive_id=archive_id, account_key=plan['account_key'],
-                    cutoff=cutoff, first=plan['first'], last=plan['last'], expected_count=plan['count'],
+                    cutoff=cutoff, date_mode=plan['date_mode'], first=plan['first'], last=plan['last'], expected_count=plan['count'],
                     expected_bytes=plan['bytes'], complete=False, folders=[])
     emit('archive_path', path=str(root))
     with locked(root):
@@ -281,6 +381,9 @@ def archive(client, account, cutoff, destination, expected_plan=None, cancel=Non
             folder_key = hashlib.sha256(folder['name'].encode('ascii')).hexdigest()
             for expected in folder['messages']:
                 record = metadata(client, expected['uid'])
+                if date_mode != 'internal':
+                    record['header_date'] = header_date(client, expected['uid'])
+                record['selected_date'] = selected_date(record, date_mode, cutoff)[0]
                 if record != expected:
                     raise ArchiveError('Nachrichtenmetadaten haben sich nach der Vorschau geaendert.')
                 relative = 'messages/%s/%d.eml' % (folder_key, record['uid'])
@@ -297,6 +400,8 @@ def archive(client, account, cutoff, destination, expected_plan=None, cancel=Non
                     f.flush()
                     os.fsync(f.fileno())
                 os.replace(part, path)
+                if date_mode != 'internal' and eml_header_date(path) != record['header_date']:
+                    raise ArchiveError('Datum im archivierten EML weicht vom geprueften Header ab.')
                 saved['messages'].append(dict(record, path=relative, sha256=digest.hexdigest()))
                 done += 1
                 if done % 100 == 0:
@@ -344,11 +449,17 @@ def verify(root, cancel=None):
             if identity in seen or msg['path'] != 'messages/%s/%d.eml' % (key, msg['uid']):
                 raise ArchiveError('Doppelte Nachricht oder falsche Pfadzuordnung.')
             seen.add(identity)
-            if internal_date(msg['internaldate']).isoformat() != msg['date'] or msg['date'] >= manifest['cutoff']:
-                raise ArchiveError('Datum stimmt nicht mit der Altersauswahl ueberein.')
+            mode = validate_mode(manifest.get('date_mode', 'internal'))
+            if internal_date(msg['internaldate']).isoformat() != msg['date']:
+                raise ArchiveError('Internes IMAP-Datum stimmt nicht mit dem Archiv ueberein.')
+            selected, reason = selected_date(msg, mode, manifest['cutoff'])
+            if not selected or selected != msg.get('selected_date', msg['date'] if mode == 'internal' else None):
+                raise ArchiveError('Datumsgrundlage oder Altersauswahl stimmt nicht mit dem Archiv ueberein.')
             path = archive_file(root, msg['path'])
             if not path.is_file() or path.stat().st_size != msg['size'] or file_hash(path, cancel) != msg['sha256']:
                 raise ArchiveError('Archivdatei fehlt oder ist veraendert. KEINE Bereinigung freigegeben.')
+            if mode != 'internal' and eml_header_date(path) != msg.get('header_date'):
+                raise ArchiveError('Datum-Header im Archiv stimmt nicht mit dem Auswahlprotokoll ueberein.')
             count += 1
             size += msg['size']
     if count != manifest['expected_count'] or size != manifest['expected_bytes'] or count < 1:
@@ -472,10 +583,10 @@ def main():
             raise ArchiveError('Unbekannter Vorgang.')
         client = connect(req['account'], req.pop('password'))
         if operation == 'preview':
-            plan = snapshot(client, req['account'], req['cutoff'], cancel)
+            plan = snapshot(client, req['account'], req['cutoff'], cancel, req.get('date_mode', 'internal'))
             emit('result', **{k: v for k, v in plan.items() if k != 'folders'})
         elif operation == 'archive':
-            archive(client, req['account'], req['cutoff'], req['destination'], req.get('plan_id'), cancel)
+            archive(client, req['account'], req['cutoff'], req['destination'], req.get('plan_id'), cancel, req.get('date_mode', 'internal'))
         elif operation == 'cleanup':
             cleanup(client, req['account'], req['archive'], req.get('confirmation'), req.get('manifest_sha256'), cancel)
         else:

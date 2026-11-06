@@ -32,13 +32,13 @@ $launcher=Join-Path $stage 'py.exe'
 & $launcher -3 -c 'import sys, ssl, imapbackup3.cli, pyzipper; assert sys.version_info[:2] == (3,13); c=ssl.create_default_context(); assert c.check_hostname; print("PACKAGED_PYTHON_IMPORTS_PASS")'
 if($LASTEXITCODE -ne 0){throw 'Bundled interpreter or dependency smoke test failed.'}
 Copy-Item -LiteralPath 'README.md' -Destination $stage
-Copy-Item -LiteralPath 'RELEASE-NOTES-1.4.0.3.md' -Destination (Join-Path $stage 'RELEASE-NOTES.md')
+Copy-Item -LiteralPath 'RELEASE-NOTES-1.4.0.4.md' -Destination (Join-Path $stage 'RELEASE-NOTES.md')
 Copy-Item -LiteralPath 'docs\BENUTZERHANDBUCH.md' -Destination (Join-Path $stage 'BENUTZERHANDBUCH.md')
 Copy-Item -LiteralPath 'docs\ARCHIVIERUNG.md' -Destination (Join-Path $stage 'ARCHIVIERUNG.md')
 Copy-Item -LiteralPath 'docs\THIRD-PARTY.md' -Destination $stage
 if(Test-Path 'support-url.txt'){Copy-Item -LiteralPath 'support-url.txt' -Destination $stage}
 $version=[Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $stage 'CM IMAP Sicherung.exe')).FileVersion
-if($version -ne '1.4.0.3'){throw "Unexpected executable version: $version"}
+if($version -ne '1.4.0.4'){throw "Unexpected executable version: $version"}
 $commit=(& git rev-parse HEAD).Trim()
 if($LASTEXITCODE -ne 0){throw 'Commit identification failed.'}
 [ordered]@{version=$version;source_commit=$commit;python=$PythonVersion;python_archive_sha256=$runtimeHash;imapbackup3_commit=$imapCommit;pyzipper='0.3.6';pycryptodomex='3.23.0';code_signed=$false;built_utc=[DateTime]::UtcNow.ToString('o')} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $stage 'BUILD-INFO.json') -Encoding utf8

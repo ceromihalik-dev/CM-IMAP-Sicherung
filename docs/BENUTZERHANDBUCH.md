@@ -1,6 +1,6 @@
 # CM IMAP Sicherung — Benutzerhandbuch
 
-**Version 1.4.0.3 · Windows 10/11 x64 · Ersteller C.Mihalik**
+**Version 1.4.0.4 · Windows 10/11 x64 · Ersteller C.Mihalik**
 
 Diese Anleitung ist sowohl als Datei im Release-Paket als auch **direkt in der Anwendung** über **Projekt → Benutzeranleitung** und **F1** verfügbar. In der Anwendung können alle Kapitel durchsucht werden; **Strg+F** öffnet die Suche. Die Hilfe funktioniert auch ohne Internet.
 
@@ -50,6 +50,15 @@ Unter **Archiv & Ansicht → MBOX Viewer** eine vorhandene MBOX öffnen, suchen,
 ## 7. Alte IMAP-E-Mails archivieren
 
 Unter **Archiv & Ansicht → E-Mail-Archiv** das richtige Konto wählen. Die **Altersgrenze** steht standardmäßig auf zehn Jahren und lässt sich verändern; alternativ den Stichtag direkt auswählen.
+
+### Datumsgrundlage wählen
+- **INTERNALDATE** (Standard): ursprüngliches IMAP-Serverdatum, schnellste Auswahl.
+- **E-Mail-Datum (Date-Header)**: der in der Nachricht gespeicherte Versandzeitpunkt. Er kann bei später importierten Nachrichten erheblich vom internen Serverdatum abweichen.
+- **Beide vergleichen**: ausschließlich Nachrichten archivieren, bei denen beide gültigen Daten vor dem Stichtag liegen. Diese Einstellung ist bewusst konservativer.
+
+Die Vorschau prüft bei Header- und Vergleichsmodus alle nicht zum Löschen markierten IMAP-Nachrichten; sie kann deshalb länger dauern. Ungültige, doppelte, fehlende oder unrealistisch zukünftige Date-Header werden ausgeschlossen und gezählt. Ein Unterschied der beiden Daten um mehr als einen Tag wird als Abweichung aufgeführt; unterschiedliche Altersbewertungen werden im Vergleichsmodus ausgeschlossen. Beim Ändern der Datumsgrundlage muss die Vorschau erneut ausgeführt werden.
+
+Die Datumsgrundlage und beide Daten werden im neuen Archivmanifest gespeichert und mit der EML-Kopie überprüft. Die spätere Bereinigung bezieht sich stets auf die geprüfte Auswahl des Archivs, nicht auf die derzeit im Dialog gewählte Option.
 
 1. **Vorschau:** Alle vom Server gelieferten auswählbaren IMAP-Ordner werden überprüft. Das Datum basiert auf **INTERNALDATE**, nicht zwingend dem sichtbaren Absenderdatum.
 2. **Archiv erstellen:** Original-E-Mails inklusive Anhängen werden als EML-Dateien in ein separates Verzeichnis gespeichert. Die Datei `manifest.json` dokumentiert UID, Ordner, Datumsbereich und Prüfsummen.
@@ -102,4 +111,4 @@ Die freiwillige Unterstützung über das Projektmenü hat keinerlei Einfluss auf
 
 **GitHub-Projekt:** https://github.com/ceromihalik-dev/CM-IMAP-Sicherung
 
-**Hinweis zum Versionsstand:** 1.4.0.3 verbessert Design, Fortschrittsanzeigen und Benutzeranleitung; die bestehende IMAP-Archivierungs- und Bereinigungslogik wird nicht erweitert.
+**Hinweis zum Versionsstand:** 1.4.0.4 verbessert Design, Fortschrittsanzeigen und Benutzeranleitung; die bestehende IMAP-Archivierungs- und Bereinigungslogik wird nicht erweitert.

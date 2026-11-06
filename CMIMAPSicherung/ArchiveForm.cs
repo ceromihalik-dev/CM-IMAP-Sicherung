@@ -18,6 +18,7 @@ namespace CMIMAPSicherung
         private readonly JavaScriptSerializer json = new JavaScriptSerializer();
         private readonly List<Button> operationButtons=new List<Button>();
         private ComboBox accounts;
+        private ComboBox dateMode;
         private NumericUpDown years;
         private DateTimePicker cutoff;
         private TextBox destination, source, log;
@@ -63,11 +64,16 @@ namespace CMIMAPSicherung
             years=new NumericUpDown {Minimum=1,Maximum=100,Value=10,Width=65};dates.Controls.Add(years);dates.Controls.Add(new Label {Text="Jahre – Nachrichten vor",AutoSize=true,Margin=new Padding(8,6,8,0)});
             cutoff=new DateTimePicker {Format=DateTimePickerFormat.Custom,CustomFormat="dd.MM.yyyy",Value=DateTime.Today.AddYears(-10),Width=130};dates.Controls.Add(cutoff);settings.Controls.Add(dates,1,1);settings.SetColumnSpan(dates,2);
             years.ValueChanged+=delegate {cutoff.Value=DateTime.Today.AddYears(-(int)years.Value);};cutoff.ValueChanged+=delegate {planId=null;};
-            LabelRow(settings,2,"Neues Archiv speichern in");destination=new TextBox {Dock=DockStyle.Fill,Text=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),"CM-EmailArchive")};settings.Controls.Add(destination,1,2);
-            var chooseDest=Button("📂  Ziel wählen",delegate {Browse(destination,false);});settings.Controls.Add(chooseDest,2,2);
-            LabelRow(settings,3,"Vorhandenes Archiv");source=new TextBox {Dock=DockStyle.Fill};settings.Controls.Add(source,1,3);source.TextChanged+=delegate {archiveId=null;manifestHash=null;};
-            settings.Controls.Add(Button("📂  Öffnen",delegate {Browse(source,true);}),2,3);
-            var note=new Label {AutoSize=true,MaximumSize=new Size(940,0),Text="Maßgeblich ist das IMAP-Eingangsdatum (INTERNALDATE). E-Mails am Stichtag bleiben erhalten. Das Archiv enthält vollständige EML-Dateien inklusive Anhängen. Beim Erstellen wird NICHTS aus dem Postfach gelöscht.\r\n\r\nSpeicher auf dem Mailserver wird erst durch die gesondert bestätigte Bereinigung frei. Eine zusätzliche Archivkopie auf einem anderen Datenträger ist dafür erforderlich.",Margin=new Padding(0,8,0,12)};
+            LabelRow(settings,2,"Datumsgrundlage");dateMode=new ComboBox {Dock=DockStyle.Fill,DropDownStyle=ComboBoxStyle.DropDownList};
+            dateMode.Items.AddRange(new object[]{"Internes Serverdatum (INTERNALDATE) – Standard","E-Mail-Datum (Date-Header) – für importierte Nachrichten","Beide vergleichen – nur übereinstimmend alte Nachrichten"});
+            dateMode.SelectedIndex=0;
+            dateMode.SelectedIndexChanged+=delegate {planId=null;};
+            settings.Controls.Add(dateMode,1,2);settings.SetColumnSpan(dateMode,2);
+            LabelRow(settings,3,"Neues Archiv speichern in");destination=new TextBox {Dock=DockStyle.Fill,Text=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),"CM-EmailArchive")};settings.Controls.Add(destination,1,3);
+            var chooseDest=Button("📂  Ziel wählen",delegate {Browse(destination,false);});settings.Controls.Add(chooseDest,2,3);
+            LabelRow(settings,4,"Vorhandenes Archiv");source=new TextBox {Dock=DockStyle.Fill};settings.Controls.Add(source,1,4);source.TextChanged+=delegate {archiveId=null;manifestHash=null;};
+            settings.Controls.Add(Button("📂  Öffnen",delegate {Browse(source,true);}),2,4);
+            var note=new Label {AutoSize=true,MaximumSize=new Size(940,0),Text="Datumsgrundlage wählen: INTERNALDATE (Server), Date-Header (E-Mail) oder konservativer Vergleich beider Angaben. Fehlende oder widersprüchliche Date-Header werden gemeldet und nicht ungeprüft ausgewählt. Nachrichten am Stichtag bleiben erhalten.\r\n\r\nBeim Archivieren wird NICHTS gelöscht. Serverplatz wird erst nach gesondert bestätigter Bereinigung frei. Vorher ist eine zweite geprüfte Archivkopie erforderlich.",Margin=new Padding(0,8,0,12)};
             root.Controls.Add(note,0,2);
             var commands=new FlowLayoutPanel {Dock=DockStyle.Fill,AutoSize=true,WrapContents=true};
             commands.Controls.Add(Button("🔎  1. Vorschau",delegate {Start("preview");}));
@@ -108,6 +114,9 @@ namespace CMIMAPSicherung
             if((operation=="verify"||operation=="cleanup"||operation=="restore")&&!File.Exists(Path.Combine(source.Text,"manifest.json")))throw new InvalidOperationException("Bitte einen vollständigen E-Mail-Archivordner mit manifest.json auswählen.");
             if(operation=="cleanup"){
                 if(String.IsNullOrEmpty(archiveId)||String.IsNullOrEmpty(manifestHash))throw new InvalidOperationException("Bitte das gewählte Archiv zuerst prüfen.");
+                if(dateMode.SelectedIndex!=0 && MessageBox.Show(this,
+                    "Wichtig: Zur Löschung zählt die Datumsgrundlage des geprüften Archivs, nicht diese aktuelle Auswahleinstellung.\r\nBitte die Datumswerte vor der endgültigen Bereinigung nochmals sorgfältig kontrollieren.",
+                    "Datumsangaben prüfen",MessageBoxButtons.OKCancel,MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2)!=DialogResult.OK)return;
                 if(!ConfirmDeletion(a))return;
             }
             if(operation=="restore"&&MessageBox.Show(this,"Das Archiv wird in NEUE Ordner des Kontos "+a.User+" importiert. Vorhandene Nachrichten werden nicht gelöscht. Wiederholtes Importieren erzeugt weitere Kopien. Fortfahren?","Wiederherstellung",MessageBoxButtons.YesNo,MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
@@ -116,7 +125,7 @@ namespace CMIMAPSicherung
             string script=Path.Combine(temp,"archive_engine.py");
             using(var stream=typeof(ArchiveForm).Assembly.GetManifestResourceStream("CMIMAPSicherung.Archive.archive_engine.py"))
             using(var target=File.Create(script)){if(stream==null)throw new InvalidOperationException("Archiv-Engine fehlt.");stream.CopyTo(target);}
-            var request=new Dictionary<string,object>{{"operation",operation},{"cutoff",cutoff.Value.ToString("yyyy-MM-dd")},{"destination",destination.Text},{"archive",source.Text},{"cancel_file",cancelFile},{"plan_id",planId},{"confirmation","LOESCHEN "+archiveId},{"manifest_sha256",manifestHash}};
+            var request=new Dictionary<string,object>{{"operation",operation},{"date_mode",dateMode.SelectedIndex==1?"header":dateMode.SelectedIndex==2?"compare":"internal"},{"cutoff",cutoff.Value.ToString("yyyy-MM-dd")},{"destination",destination.Text},{"archive",source.Text},{"cancel_file",cancelFile},{"plan_id",planId},{"confirmation","LOESCHEN "+archiveId},{"manifest_sha256",manifestHash}};
             if(a!=null)request["account"]=new Dictionary<string,object>{{"host",a.Host},{"port",a.Port},{"user",a.User},{"timeout",config.ImapTimeoutSeconds}};
             if(password!=null)request["password"]=password;
             var serialized=json.Serialize(request);request.Clear();password=null;
@@ -171,7 +180,20 @@ namespace CMIMAPSicherung
                 progress.Style=ProgressBarStyle.Continuous;progress.Maximum=Math.Max(1,Convert.ToInt32(data["total"]));progress.Value=Math.Min(progress.Maximum,Convert.ToInt32(data["count"]));
             }
             if(kind=="result"){
-                if(data.ContainsKey("plan_id")){planId=Convert.ToString(data["plan_id"]);summary.Text=String.Format("Vorschau: {0} Nachrichten | {1:N2} GiB | Zeitraum {2} bis {3}",data["count"],Convert.ToDouble(data["bytes"])/(1024*1024*1024),data["first"],data["last"]);log.AppendText(summary.Text+Environment.NewLine);}
+                if(data.ContainsKey("plan_id")) {
+                    planId=Convert.ToString(data["plan_id"]);
+                    summary.Text=String.Format("Vorschau: {0} Nachrichten | {1:N2} GiB | Zeitraum {2} bis {3}",
+                        data["count"],Convert.ToDouble(data["bytes"])/(1024*1024*1024),data["first"],data["last"]);
+                    log.AppendText(summary.Text+Environment.NewLine);
+                    int invalid=data.ContainsKey("invalid_dates")?Convert.ToInt32(data["invalid_dates"]):0;
+                    int disagreed=data.ContainsKey("disagreements")?Convert.ToInt32(data["disagreements"]):0;
+                    int conflicts=data.ContainsKey("conflicts")?Convert.ToInt32(data["conflicts"]):0;
+                    int examined=data.ContainsKey("examined")?Convert.ToInt32(data["examined"]):0;
+                    log.AppendText("Datumsmodus: "+Convert.ToString(data["date_mode"])+" | Geprüft: "+examined+
+                        " | ungültige/fehlende Header: "+invalid+" | abweichende Daten: "+disagreed+
+                        " | widersprüchliche Altersbewertung: "+conflicts+Environment.NewLine);
+                    if(invalid>0||conflicts>0)log.AppendText("Hinweis: Nachrichten ohne gültiges Date-Datum oder mit widersprüchlicher Altersbewertung werden im Vergleichsmodus nicht archiviert."+Environment.NewLine);
+                }
                 if(data.ContainsKey("manifest_sha256")){manifestHash=Convert.ToString(data["manifest_sha256"]);archiveId=Convert.ToString(data["archive_id"]);}
             }
         }
@@ -184,7 +206,7 @@ namespace CMIMAPSicherung
             try{if(Directory.Exists(temp))Directory.Delete(temp,true);}catch(IOException){}
         }
         private void RequestCancel(){if(busy&&!String.IsNullOrEmpty(cancelFile)){File.WriteAllText(cancelFile,"cancel");summary.Text="Abbruch angefordert; laufende Serverantwort wird noch verarbeitet …";cancel.Enabled=false;}}
-        private void SetBusy(bool value){busy=value;foreach(var b in operationButtons)b.Enabled=!value;accounts.Enabled=!value;years.Enabled=!value;cutoff.Enabled=!value;destination.Enabled=!value;source.Enabled=!value;cancel.Enabled=value;}
+        private void SetBusy(bool value){busy=value;foreach(var b in operationButtons)b.Enabled=!value;accounts.Enabled=!value;dateMode.Enabled=!value;years.Enabled=!value;cutoff.Enabled=!value;destination.Enabled=!value;source.Enabled=!value;cancel.Enabled=value;}
         private sealed class AccountItem {public readonly AccountConfig Account;public AccountItem(AccountConfig a){Account=a;}public override string ToString(){return Account.Name+"  ("+Account.User+")";}}
     }
 }
