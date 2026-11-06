@@ -305,8 +305,7 @@ class Tests(unittest.TestCase):
         long_mail='test.'*30+'@example.invalid'
         part=e.safe_account_label(dict(user=long_mail))
         self.assertLessEqual(len(part),62)
-        self.assertRegex(part,r'_[a-f0-9]{10} unittest.main(verbosity=2)
-)
+        self.assertRegex(part,r'_[a-f0-9]{10}$')
     def test_distinct_archives_same_period_do_not_collide(self):
         first=self.create(); second=self.create()
         self.assertNotEqual(first,second)
