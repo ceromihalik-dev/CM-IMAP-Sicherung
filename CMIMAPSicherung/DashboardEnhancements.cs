@@ -239,7 +239,7 @@ namespace CMIMAPSicherung
             var col=grid.Columns["User"];
             if(col==null)return;
             bool namesDiffer=config.Accounts.Any(a=>!String.Equals(a.Name,a.User,StringComparison.OrdinalIgnoreCase));
-            col.Visible=showUserColumn.Checked||namesDiffer;
+            col.Visible=(showUserColumn!=null&&showUserColumn.Checked)||namesDiffer;
         }
 
         private void SetGrid()
