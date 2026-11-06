@@ -81,4 +81,4 @@ jobs:
             exit 1
           fi
           (cd dist && sha256sum -c *.sha256)
-          gh release create v1.4.0.3 dist/*.zip dist/*.sha256 --target "$GITHUB_SHA" --title 'CM IMAP Sicherung 1.4.0.3 – Dark UI und E-Mail-Archiv' --notes-file RELEASE-NOTES-1.4.0.3.md --prerelease --latest=false
+          gh release create v1.4.0.3 dist/*.zip dist/*.sha256 --target "$GITHUB_SHA" --title 'CM IMAP Sicherung 1.4.0.3 – Farbige Icons und Benutzeranleitung' --notes-file RELEASE-NOTES-1.4.0.3.md --prerelease --latest=false
