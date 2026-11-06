@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace CMIMAPSicherung
@@ -15,6 +16,9 @@ namespace CMIMAPSicherung
     /// </summary>
     internal sealed class DashboardEnhancements : IDisposable
     {
+        [DllImport("user32.dll", CharSet=CharSet.Unicode)]
+        private static extern IntPtr SendMessage(IntPtr hWnd,int msg,IntPtr wParam,string text);
+        private const int EM_SETCUEBANNER=0x1501;
         private readonly MainForm main;
         private readonly TableLayoutPanel root;
         private readonly TableLayoutPanel outer;
@@ -217,8 +221,22 @@ namespace CMIMAPSicherung
                 {
                     var l=label as Label;
                     if(l==null)continue;
-                    if(l.Location.Y<25){l.Text=titles[i];l.ForeColor=UiTheme.Muted;l.Font=new Font("Segoe UI",8.6f);}
-                    else {l.ForeColor=Color.White;l.Font=new Font("Segoe UI",11f,FontStyle.Bold);}
+                    int originalY=l.Location.Y;
+                    l.Location=new Point(19,originalY);
+                    l.AutoSize=false;
+                    l.Width=Math.Max(100,card.ClientSize.Width-42);
+                    l.Anchor=AnchorStyles.Top|AnchorStyles.Left|AnchorStyles.Right;
+                    l.AutoEllipsis=true;
+                    if(originalY<25)
+                    {
+                        l.Text=titles[i];l.ForeColor=UiTheme.Muted;
+                        l.Font=new Font("Segoe UI",8.5f);l.Height=22;
+                    }
+                    else
+                    {
+                        l.ForeColor=Color.White;
+                        l.Font=new Font("Segoe UI",10f,FontStyle.Bold);l.Height=34;
+                    }
                 }
                 var stripe=new Panel{Dock=DockStyle.Left,Width=3,BackColor=colors[i]};
                 card.Controls.Add(stripe);stripe.SendToBack();
@@ -336,6 +354,9 @@ namespace CMIMAPSicherung
             search=new TextBox {Name="AccountSearch",Dock=DockStyle.Fill,Margin=new Padding(5,7,10,7),
                 Font=new Font("Segoe UI",9.6f),BackColor=UiTheme.LogBack,ForeColor=UiTheme.Text};
             tips.SetToolTip(search,"Konto, E-Mail-Adresse oder Server durchsuchen. Strg+F fokussiert dieses Feld.");
+            search.HandleCreated+=delegate {
+                SendMessage(search.Handle,EM_SETCUEBANNER,IntPtr.Zero,"Konto oder Server suchen …");
+            };
             header.Controls.Add(search,2,0);
             filter=new ComboBox {Name="AccountFilter",Dock=DockStyle.Fill,DropDownStyle=ComboBoxStyle.DropDownList,
                 Margin=new Padding(0,6,0,5),Font=new Font("Segoe UI",9.2f),

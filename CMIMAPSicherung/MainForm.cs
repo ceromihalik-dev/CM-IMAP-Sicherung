@@ -837,7 +837,7 @@ namespace CMIMAPSicherung
                     int errorCount = config.Accounts.Count(a => a.History != null && a.History.Count > 0 && (a.History[a.History.Count - 1].Result ?? "").StartsWith("Fehler"));
                     if (lblCardAccounts != null) lblCardAccounts.Text = String.Format("{0} gesamt / {1} aktiv", config.Accounts.Count, active);
                     if (lblCardStatus != null) lblCardStatus.Text = String.Format("{0} OK / {1} Fehler", okCount, errorCount);
-                    if (lblCardStorage != null) lblCardStorage.Text = String.Format("{0} / {1}", FormatBytes(total), free.Replace("frei: ", "frei "));
+                    if (lblCardStorage != null) lblCardStorage.Text = String.Format("{0} / {1}", FormatBytes(total), free.Replace("frei: ", ""));
                     if (lblCardSchedule != null) lblCardSchedule.Text = GetScheduleSummary();
                 }
                 catch
