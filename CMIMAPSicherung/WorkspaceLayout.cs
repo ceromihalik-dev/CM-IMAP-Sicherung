@@ -29,12 +29,12 @@ namespace CMIMAPSicherung
             if(root.RowStyles.Count > 6) root.RowStyles.RemoveAt(6);
             main.Controls.Remove(root);
             var outer = new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=2, RowCount=1, Margin=Padding.Empty, Padding=Padding.Empty };
-            outer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 224));
+            outer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 258));
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             outer.RowStyles.Add(new RowStyle(SizeType.Percent,100));
             var side = new FlowLayoutPanel {Dock=DockStyle.Fill, AutoScroll=true, FlowDirection=FlowDirection.TopDown, WrapContents=false, BackColor=UiTheme.Surface, Padding=new Padding(10), Margin=Padding.Empty};
             outer.Controls.Add(side,0,0);outer.Controls.Add(root,1,0);main.Controls.Add(outer);
-            side.Controls.Add(new Label { Text="ARBEITSBEREICHE", Width=190, Height=30, ForeColor=UiTheme.Muted, Font=new Font("Segoe UI",9,FontStyle.Bold) });
+            side.Controls.Add(new Label { Text="ARBEITSBEREICHE", Width=224, Height=30, ForeColor=UiTheme.Muted, Font=new Font("Segoe UI",9,FontStyle.Bold) });
             var archive = new Button {Text="🗄  E-Mail-Archiv", Name="ArchiveCommand"};
             archive.Click += delegate {
                 var worker=Field<BackgroundWorker>(main,"worker");
@@ -44,6 +44,8 @@ namespace CMIMAPSicherung
                 using(var dialog=new ArchiveForm(Field<AppConfig>(main,"config"),account)) dialog.ShowDialog(main);
             };
             var support=new Button {Text="❤️  Projekt unterstützen"};
+            var guide=new Button {Text="📖  Benutzeranleitung"};
+            guide.Click+=delegate {using(var h=new UserGuideForm())h.ShowDialog(main);};
             support.Click+=delegate {SupportLink.Show(main);};
             Group(side,"💾  Sicherung",true,
                 Command(main,"btnBackupAll","💾  Alle sichern"),Command(main,"btnBackupSelected","📥  Auswahl sichern"),Command(main,"btnCancel","⏹  Abbrechen"));
@@ -53,20 +55,26 @@ namespace CMIMAPSicherung
                 Command(main,"btnAdd","➕  Konto hinzufügen"),Command(main,"btnEdit","✏  Konto bearbeiten"),Command(main,"btnTest","🔌  Verbindung testen"),Command(main,"btnPassword","🔑  Kennwort ändern"),Command(main,"btnDelete","🗑  Konto entfernen"));
             Group(side,"⚙  Verwaltung",false,
                 Command(main,"btnTools","🛠  Prüfen & ZIP"),Command(main,"btnSchedule","🕒  Zeitplan"),Command(main,"btnHistory","📋  Konto-Historie"),Command(main,"btnGlobalHistory","📚  Gesamt-Historie"),Command(main,"btnOpenLog","📄  Protokoll öffnen"),Command(main,"btnSettings","⚙  Einstellungen"));
-            Group(side,"ℹ  Projekt",false,Command(main,"btnInfo","ℹ  Info"),support);
+            Group(side,"ℹ  Projekt",false,guide,Command(main,"btnInfo","ℹ  Info"),support);
             if(oldButtons!=null)oldButtons.Dispose();
             foreach(var label in Descendants(root).OfType<Label>())
-                if(label.Text=="Version 1.4.0.1")label.Text="Version 1.4.0.2";
-            main.Text="CM IMAP Sicherung 1.4.0.2";
+                if(label.Text=="Version 1.4.0.1"||label.Text=="Version 1.4.0.2")label.Text="Version 1.4.0.3";
+            main.Text="CM IMAP Sicherung 1.4.0.3";
             main.MinimumSize=new Size(1050,700);
             var area=Screen.FromControl(main).WorkingArea;
             main.Size=new Size(Math.Min(1400,area.Width),Math.Min(900,area.Height));
-            Theme(main);themed.Add(main);
+            Theme(main);
+            SmoothProgress.Replace(Field<ProgressBar>(main,"progressOverall"));
+            SmoothProgress.Replace(Field<ProgressBar>(main,"progressCurrent"));
+            ColorIcons.Apply(main);
+            main.KeyPreview=true;
+            main.KeyDown+=delegate(object sender,KeyEventArgs e) {if(e.KeyCode==Keys.F1){using(var h=new UserGuideForm())h.ShowDialog(main);e.Handled=true;}};
+            themed.Add(main);
             main.FormClosed+=delegate {themed.Remove(main);};
             main.ResumeLayout(true);
             if(!hooked){hooked=true;Application.Idle+=delegate {
                 foreach(var form in Application.OpenForms.Cast<Form>().ToArray())
-                    if(!themed.Contains(form)){Theme(form);themed.Add(form);form.FormClosed+=delegate {themed.Remove(form);};}
+                    if(!themed.Contains(form)){Theme(form);ColorIcons.Apply(form);themed.Add(form);form.FormClosed+=delegate {themed.Remove(form);};}
             };}
         }
         private static Button Command(MainForm main,string field,string text)
@@ -77,12 +85,12 @@ namespace CMIMAPSicherung
         }
         private static void Group(FlowLayoutPanel parent,string title,bool expanded,params Button[] commands)
         {
-            var group=new FlowLayoutPanel {Width=190,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=new Padding(0,0,0,10)};
-            var heading=new Button {Text=(expanded?"▾ ":"▸ ")+title,Width=190,Height=36,TextAlign=ContentAlignment.MiddleLeft,Font=new Font("Segoe UI",9.5F,FontStyle.Bold)};
+            var group=new FlowLayoutPanel {Width=224,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=new Padding(0,0,0,10)};
+            var heading=new Button {Text=(expanded?"▾ ":"▸ ")+title,Width=224,Height=36,TextAlign=ContentAlignment.MiddleLeft,Font=new Font("Segoe UI",9.5F,FontStyle.Bold)};
             UiTheme.ApplySecondary(heading);group.Controls.Add(heading);
-            var body=new FlowLayoutPanel {Width=190,AutoSize=true,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=Padding.Empty,Visible=expanded};
-            foreach(var button in commands){button.Width=188;button.Height=37;button.Margin=new Padding(0,2,0,2);button.TextAlign=ContentAlignment.MiddleLeft;button.Padding=new Padding(8,0,0,0);button.AccessibleName=button.Text;body.Controls.Add(button);}
-            heading.Click+=delegate {body.Visible=!body.Visible;heading.Text=(body.Visible?"▾ ":"▸ ")+title;};
+            var body=new FlowLayoutPanel {Width=224,AutoSize=true,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=Padding.Empty,Visible=expanded};
+            foreach(var button in commands){button.Width=220;button.Height=37;button.Margin=new Padding(0,2,0,2);button.TextAlign=ContentAlignment.MiddleLeft;button.Padding=new Padding(8,0,0,0);button.AccessibleName=button.Text;body.Controls.Add(button);}
+            heading.Click+=delegate {body.Visible=!body.Visible;heading.Text=(body.Visible?"▾ ":"▸ ")+System.Text.RegularExpressions.Regex.Replace(title,@"^[^\p{L}]+","");};
             group.Controls.Add(body);parent.Controls.Add(group);
         }
         private static IEnumerable<Control> Descendants(Control parent)

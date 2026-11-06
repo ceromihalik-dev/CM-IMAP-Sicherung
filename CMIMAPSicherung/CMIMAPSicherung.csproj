@@ -20,13 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs"/><Compile Include="Models.cs"/><Compile Include="MainForm.cs"/>
-    <Compile Include="AccountEditForm.cs"/><Compile Include="UiTheme.cs"/><Compile Include="WorkspaceLayout.cs"/><Compile Include="ArchiveForm.cs"/><Compile Include="SupportLink.cs"/><Compile Include="SmokeTest.cs"/>
+    <Compile Include="AccountEditForm.cs"/><Compile Include="UiTheme.cs"/><Compile Include="WorkspaceLayout.cs"/><Compile Include="ColorIcons.cs"/><Compile Include="SmoothProgress.cs"/><Compile Include="UserGuideForm.cs"/><Compile Include="ArchiveForm.cs"/><Compile Include="SupportLink.cs"/><Compile Include="SmokeTest.cs"/>
     <Compile Include="RestoreForm.cs"/><Compile Include="MboxViewerForm.cs"/><Compile Include="ImapAutoDetect.cs"/><Compile Include="ImapBackupCompatibility.cs"/>
     <Compile Include="HistoryForm.cs"/><Compile Include="PasswordForm.cs"/><Compile Include="SchedulerForm.cs"/><Compile Include="SettingsForm.cs"/>
     <Compile Include="InfoForm.cs"/><Compile Include="GlobalHistoryForm.cs"/><Compile Include="TaskSchedulerManager.cs"/><Compile Include="BackupTools.cs"/><Compile Include="AdvancedToolsForm.cs"/><Compile Include="Properties\AssemblyInfo.cs"/>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\cm_logo.png"><LogicalName>CMIMAPSicherung.Resources.cm_logo.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\additional-icons.png"><LogicalName>CMIMAPSicherung.Resources.additional-icons.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Resources\emoji-icons.png"><LogicalName>CMIMAPSicherung.Resources.emoji-icons.png</LogicalName></EmbeddedResource>
     <EmbeddedResource Include="Resources\cm_logo.ico"><LogicalName>CMIMAPSicherung.Resources.cm_logo.ico</LogicalName></EmbeddedResource>
     <EmbeddedResource Include="Archive\archive_engine.py"><LogicalName>CMIMAPSicherung.Archive.archive_engine.py</LogicalName></EmbeddedResource>
   </ItemGroup>

@@ -1,7 +1,7 @@
 name: Windows Build
 on:
   push:
-    branches: [main, 'feature/v1.4.0.2-ui-archive']
+    branches: [main, 'feature/v1.4.0.3-ui-archive']
     tags: ['v*']
   pull_request:
     branches: [main]
@@ -58,7 +58,7 @@ jobs:
           retention-days: 30
   publish:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release:1.4.0.2]')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release:1.4.0.3]')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -76,9 +76,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          if gh release view v1.4.0.2 >/dev/null 2>&1; then
+          if gh release view v1.4.0.3 >/dev/null 2>&1; then
             echo 'Existing release will not be replaced.'
             exit 1
           fi
           (cd dist && sha256sum -c *.sha256)
-          gh release create v1.4.0.2 dist/*.zip dist/*.sha256 --target "$GITHUB_SHA" --title 'CM IMAP Sicherung 1.4.0.2 – Dark UI und E-Mail-Archiv' --notes-file RELEASE-NOTES-1.4.0.2.md --prerelease --latest=false
+          gh release create v1.4.0.3 dist/*.zip dist/*.sha256 --target "$GITHUB_SHA" --title 'CM IMAP Sicherung 1.4.0.3 – Farbige Icons und Benutzeranleitung' --notes-file RELEASE-NOTES-1.4.0.3.md --prerelease --latest=false
