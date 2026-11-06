@@ -12,6 +12,14 @@ namespace CMIMAPSicherung
             foreach(Control c in parent.Controls)if(t.IsAssignableFrom(c.GetType())||ContainsControl(c,t))return true;
             return false;
         }
+        private static bool HasGuideText(Control parent) {
+            foreach(Control c in parent.Controls) {
+                var rich=c as RichTextBox;
+                if(rich!=null && rich.TextLength>200)return true;
+                if(HasGuideText(c))return true;
+            }
+            return false;
+        }
         private static bool ContainsColorIcon(Control parent) {
             foreach(Control c in parent.Controls) {
                 var b=c as Button;
@@ -40,6 +48,7 @@ namespace CMIMAPSicherung
                     using(var guide=new UserGuideForm()) {
                         guide.Show(main);Application.DoEvents();
                         if(guide.Controls.Count==0)throw new Exception("Guide failed to open.");
+                        if(!HasGuideText(guide))throw new Exception("Guide has no chapter body.");
                         using(var image=new Bitmap(guide.Width,guide.Height)){guide.DrawToBitmap(image,new Rectangle(Point.Empty,guide.Size));image.Save(Path.Combine(directory,"user-guide.png"),ImageFormat.Png);}
                         guide.Close();
                     }

@@ -164,7 +164,7 @@ Version 1.4.0.3 verbessert die Bedienoberfläche und ergänzt diese integrierte 
             outer.Controls.Add(body,1,1);
             WorkspaceLayout.Theme(this);
             ColorIcons.Apply(this);
-            search.Text="";Filter();
+            search.Text="";Filter();UpdateChapter();
             if(initial!=null){for(int i=0;i<topics.Items.Count;i++)if(topics.Items[i].ToString().IndexOf(initial,StringComparison.OrdinalIgnoreCase)>=0){topics.SelectedIndex=i;break;}}
             KeyDown+=delegate(object s,KeyEventArgs e) {if(e.KeyCode==Keys.Escape){Close();e.Handled=true;}if(e.Control&&e.KeyCode==Keys.F){search.Focus();e.SuppressKeyPress=true;}};
         }
