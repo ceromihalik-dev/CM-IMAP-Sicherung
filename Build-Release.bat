@@ -14,6 +14,7 @@ if not exist "CMIMAPSicherung\bin\Release" mkdir "CMIMAPSicherung\bin\Release"
 "%CSC%" /nologo /target:winexe /main:CMIMAPSicherung.Program /platform:x64 /optimize+ /utf8output /codepage:65001 ^
  /win32icon:"CMIMAPSicherung\Resources\cm_logo.ico" ^
  /resource:"CMIMAPSicherung\Resources\cm_logo.png",CMIMAPSicherung.Resources.cm_logo.png ^
+ /resource:"CMIMAPSicherung\Resources\emoji-icons.png",CMIMAPSicherung.Resources.emoji-icons.png ^
  /resource:"CMIMAPSicherung\Resources\cm_logo.ico",CMIMAPSicherung.Resources.cm_logo.ico ^
  /resource:"CMIMAPSicherung\Archive\archive_engine.py",CMIMAPSicherung.Archive.archive_engine.py ^
  /out:"CMIMAPSicherung\bin\Release\CM IMAP Sicherung.exe" ^
@@ -23,7 +24,7 @@ if errorlevel 1 goto :FAIL
 "%CSC%" /nologo /target:exe /platform:x64 /optimize+ /codepage:65001 /out:"CMIMAPSicherung\bin\Release\py.exe" /reference:System.dll /reference:System.Core.dll tools\PythonLauncher.cs
 if errorlevel 1 goto :FAIL
 if not exist "CMIMAPSicherung\bin\Release\CM IMAP Sicherung.exe" goto :FAIL
-echo [OK] CM IMAP Sicherung 1.4.0.2 erfolgreich kompiliert.
+echo [OK] CM IMAP Sicherung 1.4.0.3 erfolgreich kompiliert.
 echo Fuer das portable Windows-Paket: tools\Package-Windows.ps1 verwenden.
 if not defined NOPAUSE pause
 exit /b 0

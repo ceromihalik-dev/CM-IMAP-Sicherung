@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0.3 – UI und Benutzeranleitung (Vorabversion)
+
+- Farbige, als eingebettete PNG-Grafiken dargestellte Emoji-Symbole in Navigation und Aktionsschaltflächen, unabhängig von der Emoji-Fontdarstellung in Windows.
+- Animierte, selbstgezeichnete Fortschrittsanzeigen mit Prozentwerten für echte Zahlenstände und Lichtbandeffekt für Aktivitäten ohne bekannte Gesamtlänge; kein künstlicher Prozentfortschritt.
+- Größere seitliche Navigation, zusätzliche Hilfeschaltfläche und integrierte kapitelweise, durchsuchbare Offline-Anleitung (F1).
+- Komplettes Benutzerhandbuch zusätzlich als Markdown-Datei im Windows-Paket.
+- Archivfunktion, Konten und gespeicherte Sicherungen bleiben unverändert; keinerlei automatische Bereinigung.
+- Neue Windows-CI-UI-Smoke-Prüfung für Symbole, Fortschrittsanzeigen und Handbuch.
+
+
 ## 1.4.0.2 – Vorabversion
 
 - Dunkles VS-Code-artiges Design und gruppierte, aufklappbare Navigation mit Emoji-/Symbolbeschriftungen.

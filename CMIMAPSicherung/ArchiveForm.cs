@@ -39,6 +39,10 @@ namespace CMIMAPSicherung
             if(accounts.Items.Count>0)accounts.SelectedIndex=0;
             for(int i=0;i<accounts.Items.Count;i++)if(((AccountItem)accounts.Items[i]).Account==selected)accounts.SelectedIndex=i;
             WorkspaceLayout.Theme(this);
+            SmoothProgress.Replace(progress);
+            ColorIcons.Apply(this);
+            KeyPreview=true;
+            KeyDown+=delegate(object sender,KeyEventArgs e) {if(e.KeyCode==Keys.F1){using(var h=new UserGuideForm("Alte E-Mails"))h.ShowDialog(this);e.Handled=true;}};
             worker=new BackgroundWorker();worker.WorkerReportsProgress=true;
             worker.DoWork+=Run;
             worker.ProgressChanged+=delegate(object sender,ProgressChangedEventArgs e){OnEvent(e.UserState as Dictionary<string,object>);};
@@ -72,6 +76,9 @@ namespace CMIMAPSicherung
             commands.Controls.Add(Button("🗑  4. Postfach bereinigen",delegate {Start("cleanup");}));
             commands.Controls.Add(Button("♻  Archiv wiederherstellen",delegate {Start("restore");}));
             commands.Controls.Add(Button("📂  Archivordner",delegate {if(Directory.Exists(source.Text))Process.Start(new ProcessStartInfo(source.Text){UseShellExecute=true});}));
+            var help=new System.Windows.Forms.Button {Text="📖  Anleitung",AutoSize=true,Height=34,MinimumSize=new Size(125,34),Margin=new Padding(0,4,8,4)};
+            help.Click+=delegate {using(var h=new UserGuideForm("Alte E-Mails"))h.ShowDialog(this);};
+            commands.Controls.Add(help);
             root.Controls.Add(commands,0,3);
             log=new TextBox {Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Both,WordWrap=false,Dock=DockStyle.Fill,Font=new Font("Consolas",9)};root.Controls.Add(log,0,4);
             var footer=new TableLayoutPanel {AutoSize=true,Dock=DockStyle.Fill,ColumnCount=2};footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));footer.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
