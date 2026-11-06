@@ -1,96 +1,84 @@
 name: Windows Build
-
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "v*"
+    branches: [main, 'feature/v1.4.0.2-ui-archive']
+    tags: ['v*']
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   build:
-    name: Build CM IMAP Sicherung
+    name: Tests, Windows EXE and portable package
     runs-on: windows-latest
-
+    timeout-minutes: 25
     steps:
-      - name: Quellcode auschecken
-        uses: actions/checkout@v4
-
-      - name: Build starten
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - name: Archive safety tests (no real accounts)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force reports | Out-Null
+          python -m unittest discover -s tests -v 2>&1 | Tee-Object reports/archive-tests.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Archive safety tests failed.' }
+      - name: Build executable and in-process Python launcher
         shell: cmd
-        run: echo.|call Build-Release.bat
-
-      - name: EXE pruefen
-        shell: powershell
+        run: call Build-Release.bat /ci
+      - name: Package pinned Python runtime and dependencies
+        shell: pwsh
+        run: ./tools/Package-Windows.ps1
+      - name: Render main and archive windows
+        shell: pwsh
         run: |
-          $exe = "CMIMAPSicherung\bin\Release\CM IMAP Sicherung.exe"
-
-          if (-not (Test-Path $exe)) {
-            throw "CM IMAP Sicherung.exe wurde nicht erzeugt."
-          }
-
-          Get-Item $exe | Format-List Name,Length,LastWriteTime
-
-      - name: Windows-Paket vorbereiten
-        shell: powershell
-        run: |
-          New-Item -ItemType Directory -Force "artifact" | Out-Null
-
-          Copy-Item `
-            "CMIMAPSicherung\bin\Release\CM IMAP Sicherung.exe" `
-            "artifact\CM IMAP Sicherung.exe"
-
-          Copy-Item "README.md" "artifact\README.md"
-
-          if (Test-Path "CHANGELOG.md") {
-            Copy-Item "CHANGELOG.md" "artifact\CHANGELOG.md"
-          }
-
-          if (Test-Path "RELEASE-NOTES-1.4.0.1.txt") {
-            Copy-Item `
-              "RELEASE-NOTES-1.4.0.1.txt" `
-              "artifact\RELEASE-NOTES.txt"
-          }
-
-      - name: Actions-Artefakt hochladen
+          $exe = (Resolve-Path 'artifact/CM-IMAP-Sicherung/CM IMAP Sicherung.exe').Path
+          $report = (Resolve-Path 'reports').Path
+          $p = Start-Process -FilePath $exe -ArgumentList "/ui-smoke-test `"$report`"" -PassThru
+          if (-not $p.WaitForExit(90000)) { $p.Kill(); throw 'UI smoke test timed out.' }
+          if ($p.ExitCode -ne 0) { throw 'UI smoke test failed.' }
+          Get-Content reports/ui-smoke.txt
+      - name: Test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: QA-${{ github.run_id }}
+          path: reports/
+          retention-days: 30
+      - name: Windows package
         uses: actions/upload-artifact@v4
         with:
           name: CM-IMAP-Sicherung-Windows
-          path: artifact
+          path: dist/*
           if-no-files-found: error
           retention-days: 30
-
-      - name: Release-ZIP erzeugen
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: powershell
-        run: |
-          $tag = "${{ github.ref_name }}"
-          $zip = "CM-IMAP-Sicherung-$tag-Windows.zip"
-
-          Compress-Archive `
-            -Path "artifact\*" `
-            -DestinationPath $zip `
-            -CompressionLevel Optimal
-
-          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-
-          "$hash  $zip" |
-            Set-Content "$zip.sha256" -Encoding ASCII
-
-          Write-Host "Release-Paket: $zip"
-          Write-Host "SHA-256: $hash"
-
-      - name: Release-Dateien hochladen
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  publish:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release:1.4.0.2]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
         with:
-          files: |
-            CM-IMAP-Sicherung-${{ github.ref_name }}-Windows.zip
-            CM-IMAP-Sicherung-${{ github.ref_name }}-Windows.zip.sha256
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: CM-IMAP-Sicherung-Windows
+          path: dist
+      - name: Publish tested preview without replacing existing releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh release view v1.4.0.2 >/dev/null 2>&1; then
+            echo 'Existing release will not be replaced.'
+            exit 1
+          fi
+          (cd dist && sha256sum -c *.sha256)
+          gh release create v1.4.0.2 dist/*.zip dist/*.sha256 --target "$GITHUB_SHA" --title 'CM IMAP Sicherung 1.4.0.2 – Dark UI und E-Mail-Archiv' --notes-file RELEASE-NOTES-1.4.0.2.md --prerelease --latest=false
