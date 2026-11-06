@@ -36,20 +36,21 @@ namespace CMIMAPSicherung
             outer.Controls.Add(side,0,0);outer.Controls.Add(root,1,0);main.Controls.Add(outer);
             side.Controls.Add(new Label { Text="ARBEITSBEREICHE", Width=224, Height=30, ForeColor=UiTheme.Muted, Font=new Font("Segoe UI",9,FontStyle.Bold) });
             var archive = new Button {Text="🗄  E-Mail-Archiv", Name="ArchiveCommand"};
-            archive.Click += delegate {
+            Action openArchive=delegate {
                 var worker=Field<BackgroundWorker>(main,"worker");
                 if(worker!=null&&worker.IsBusy){MessageBox.Show(main,"Bitte den laufenden Sicherungsvorgang zuerst beenden.","E-Mail-Archiv");return;}
                 var grid=Field<DataGridView>(main,"grid");
                 var account=grid.SelectedRows.Count>0?grid.SelectedRows[0].Tag as AccountConfig:null;
                 using(var dialog=new ArchiveForm(Field<AppConfig>(main,"config"),account)) dialog.ShowDialog(main);
             };
+            archive.Click+=delegate {openArchive();};
             var support=new Button {Text="❤️  Projekt unterstützen"};
             var guide=new Button {Text="📖  Benutzeranleitung"};
             guide.Click+=delegate {using(var h=new UserGuideForm())h.ShowDialog(main);};
             support.Click+=delegate {SupportLink.Show(main);};
-            Group(side,"💾  Sicherung",true,
+            Group(side,"💾  Sicherung",false,
                 Command(main,"btnBackupAll","💾  Alle sichern"),Command(main,"btnBackupSelected","📥  Auswahl sichern"),Command(main,"btnCancel","⏹  Abbrechen"));
-            Group(side,"🗄  Archiv & Ansicht",true,archive,
+            Group(side,"🗄  Archiv & Ansicht",false,archive,
                 Command(main,"btnRestore","♻  Backup wiederherstellen"),Command(main,"btnMboxViewer","✉  MBOX Viewer"),Command(main,"btnOpenBackup","📂  Backup-Ordner"));
             Group(side,"👤  Konten",false,
                 Command(main,"btnAdd","➕  Konto hinzufügen"),Command(main,"btnEdit","✏  Konto bearbeiten"),Command(main,"btnTest","🔌  Verbindung testen"),Command(main,"btnPassword","🔑  Kennwort ändern"),Command(main,"btnDelete","🗑  Konto entfernen"));
@@ -58,14 +59,16 @@ namespace CMIMAPSicherung
             Group(side,"ℹ  Projekt",false,guide,Command(main,"btnInfo","ℹ  Info"),support);
             if(oldButtons!=null)oldButtons.Dispose();
             foreach(var label in Descendants(root).OfType<Label>())
-                if(label.Text=="Version 1.4.0.1"||label.Text=="Version 1.4.0.2")label.Text="Version 1.4.0.3";
-            main.Text="CM IMAP Sicherung 1.4.0.3";
+                if(label.Text.StartsWith("Version 1.4."))label.Text="Version 1.4.0.5";
+            main.Text="CM IMAP Sicherung 1.4.0.5";
             main.MinimumSize=new Size(1050,700);
             var area=Screen.FromControl(main).WorkingArea;
             main.Size=new Size(Math.Min(1400,area.Width),Math.Min(900,area.Height));
             Theme(main);
             SmoothProgress.Replace(Field<ProgressBar>(main,"progressOverall"));
-            SmoothProgress.Replace(Field<ProgressBar>(main,"progressCurrent"));
+            SmoothProgress.Replace(Field<ProgressBar>(main,"progressCurrent"),false);
+            // New shell is strictly visual. All original action handlers remain on MainForm.
+            new DashboardEnhancements(main,root,outer,openArchive).Install();
             ColorIcons.Apply(main);
             main.KeyPreview=true;
             main.KeyDown+=delegate(object sender,KeyEventArgs e) {if(e.KeyCode==Keys.F1){using(var h=new UserGuideForm())h.ShowDialog(main);e.Handled=true;}};
@@ -85,15 +88,15 @@ namespace CMIMAPSicherung
         }
         private static void Group(FlowLayoutPanel parent,string title,bool expanded,params Button[] commands)
         {
-            var group=new FlowLayoutPanel {Width=224,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=new Padding(0,0,0,10)};
+            var group=new FlowLayoutPanel {Name="NavigationGroup",Width=224,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=new Padding(0,0,0,10)};
             var heading=new Button {Text=(expanded?"▾ ":"▸ ")+title,Width=224,Height=36,TextAlign=ContentAlignment.MiddleLeft,Font=new Font("Segoe UI",9.5F,FontStyle.Bold)};
             UiTheme.ApplySecondary(heading);group.Controls.Add(heading);
-            var body=new FlowLayoutPanel {Width=224,AutoSize=true,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=Padding.Empty,Visible=expanded};
+            var body=new FlowLayoutPanel {Name="NavigationCommands",Width=224,AutoSize=true,FlowDirection=FlowDirection.TopDown,WrapContents=false,Margin=Padding.Empty,Visible=expanded};
             foreach(var button in commands){button.Width=220;button.Height=37;button.Margin=new Padding(0,2,0,2);button.TextAlign=ContentAlignment.MiddleLeft;button.Padding=new Padding(8,0,0,0);button.AccessibleName=button.Text;body.Controls.Add(button);}
             heading.Click+=delegate {body.Visible=!body.Visible;heading.Text=(body.Visible?"▾ ":"▸ ")+System.Text.RegularExpressions.Regex.Replace(title,@"^[^\p{L}]+","");};
             group.Controls.Add(body);parent.Controls.Add(group);
         }
-        private static IEnumerable<Control> Descendants(Control parent)
+        internal static IEnumerable<Control> Descendants(Control parent)
         {
             foreach(Control child in parent.Controls){yield return child;foreach(var c in Descendants(child))yield return c;}
         }

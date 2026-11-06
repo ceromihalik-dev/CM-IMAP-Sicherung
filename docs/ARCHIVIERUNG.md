@@ -1,4 +1,4 @@
-# Alte E-Mails archivieren – Version 1.4.0.4
+# Alte E-Mails archivieren – Version 1.4.0.5
 
 ## Zweck und Format
 
@@ -58,3 +58,8 @@ Einzelne Nachrichten über 128 MiB können mit dieser Wiederherstellung nicht ho
 Der Stichtag selbst wird nicht archiviert. Das gesamte E-Mail-Datum muss einen eindeutig parsebaren Zeitzonenbezug besitzen. Für die fachliche Auswahl wird das jeweilige lokale Kalenderdatum der im IMAP-Eingangsdatum bzw. RFC-5322-Header genannten Zeitzone benutzt. Die Anzahl geprüfter Nachrichten und Warnungen erscheinen in der Vorschau.
 
 Das gewählte Verfahren und die ausgewählten Werte sind im Archivmanifest gespeichert. Bei Archivprüfung werden die EML-Dateien und ihre Header erneut gelesen, gegen Manifest und gewählten Modus geprüft und anschließend mit SHA-256 kontrolliert. Beim Löschvorgang gelten weiterhin Konto-, UIDVALIDITY-, Hash- und UID-EXPUNGE-Schutz; ein neu ausgewählter Modus im Fenster ändert bestehende Archive nicht. Die Header-/Vergleichsauswahl erfordert wegen des zusätzlichen Scans bei großen Postfächern mehr Zeit.
+
+
+## Archivordner mit E-Mail-Konto ab 1.4.0.5
+
+Neue Archive verwenden `EmailArchiv_<konto>_von_<yyyy.mm.dd>_bis_<yyyy.mm.dd>_<Kennung>`, beispielsweise `EmailArchiv_konto@beispiel.invalid_von_2005.01.01_bis_2016.11.05_ab12cd34`. Der Kontobestandteil wird ausschließlich für den lokalen Windows-Pfad bereinigt und gegebenenfalls gekürzt; die eindeutige Archivkennung bleibt erhalten. Die vollständige Kontobindung wird weiterhin über den Kontofingerabdruck im Manifest geprüft, **niemals** anhand des lesbaren Ordnernamens. Bestehende Archivordner werden nicht automatisch umbenannt und bleiben prüf- und wiederherstellbar.

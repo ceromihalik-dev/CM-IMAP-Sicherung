@@ -24,7 +24,7 @@ namespace CMIMAPSicherung
             KeyPreview=true;
             chapters.Add(new KeyValuePair<string,string>("01 · Erste Schritte",
 @"CM IMAP SICHERUNG
-Benutzeranleitung · Version 1.4.0.4
+Benutzeranleitung · Version 1.4.0.5
 
 INSTALLATION UND START
 1. Das vollständige Windows-x64-ZIP aus dem GitHub-Release herunterladen.
@@ -33,7 +33,9 @@ INSTALLATION UND START
 
 Im selben Verzeichnis müssen py.exe und runtime liegen. Windows 10/11 x64 und .NET Framework 4.8 werden benötigt. Python muss nicht selbst installiert werden. Die Anwendung ist nicht codesigniert.
 
-Die Navigation links lässt sich in Bereiche aufklappen. Über das Buchsymbol oder F1 öffnen Sie diese Anleitung jederzeit.
+Beim Programmstart sind alle fünf Navigationsgruppen links eingeklappt; sie lassen sich einzeln öffnen. Die wichtigsten Aktionen bleiben zusätzlich über die zentrale Aktionsleiste erreichbar.
+
+Über das dauerhaft sichtbare Menü Hilfe -> Benutzeranleitung oder über F1 öffnen Sie diese Offline-Hilfe. Im Kontenbereich gibt es ein Suchfeld, Filter und sortierbare Spalten. Strg+F fokussiert die Kontensuche.
 Zur Sicherung gehören ein ausreichend großes lokales oder externes Sicherungsziel sowie Zugriff auf das E-Mail-Konto."));
             chapters.Add(new KeyValuePair<string,string>("02 · IMAP-Konto einrichten",
 @"IMAP-KONTEN VERWALTEN
@@ -56,6 +58,10 @@ Abbrechen: den aktuellen Vorgang kontrolliert unterbrechen.
 
 Die blaue Fortschrittsanzeige zeigt abgeschlossene Konten als Prozentwert. Der animierte Balken für das aktive Konto ist eine Aktivitätsanzeige; er ist KEINE Schätzung der noch zu übertragenden Datenmenge.
 
+Die Kontentabelle trennt die letzte Aktion (Verbindungstest oder Sicherung) von der lokalen Datenmenge. Ein grünes OK beweist nicht, dass Sicherungsdateien vorhanden und wiederherstellbar sind. Steht bei einem Konto 0 B, ist das gewählte Sicherungsziel und seine Ordnerstruktur zu prüfen.
+
+Die Protokollansicht unten startet eingeklappt, lässt sich über den Titel öffnen und beim Sicherungsstart bzw. Fehler automatisch einblenden.
+
 Während der Sicherung Netzverbindung, freien Festplattenplatz und Protokoll beachten. Eine erfolgreiche Ausführung zusätzlich über die Sicherungshistorie kontrollieren."));
             chapters.Add(new KeyValuePair<string,string>("04 · Zeitplan und Protokolle",
 @"AUTOMATISCHE SICHERUNG
@@ -75,7 +81,7 @@ Protokolle können Ordnernamen und technische Kontodaten enthalten. Vor dem Weit
 5. Archiv auf einem ausreichend großen getrennten Laufwerk erstellen.
 6. Vollständigkeit über Archiv prüfen kontrollieren.
 
-Archivformat: vollständige EML-Nachrichten einschließlich Anhängen, manifest.json und Prüfsummen. Der Ordner trägt den Datumsbereich der enthaltenen Nachrichten, beispielsweise EmailArchiv von 2008.01.01 bis 2016.11.05_<Kennung>.
+Archivformat: vollständige EML-Nachrichten einschließlich Anhängen, manifest.json und Prüfsummen. Der Ordner trägt den Datumsbereich der enthaltenen Nachrichten, beispielsweise EmailArchiv_konto@beispiel.invalid_von_2008.01.01_bis_2016.11.05_<Kennung>.
 
 DATUMSGRUNDLAGE:
 1. Internes Serverdatum (INTERNALDATE): bisherige Standardeinstellung.
@@ -148,7 +154,7 @@ Projekt: https://github.com/ceromihalik-dev/CM-IMAP-Sicherung
 Die Unterstützung des Projekts ist freiwillig und beeinflusst keine Programmfunktionen. Es werden keine Bank- oder PayPal-Zugangsdaten in der Anwendung benötigt.
 
 Die Software einschließlich der neuen Archivbereinigung wurde noch nicht auf allen IMAP-Anbietern produktiv geprüft.
-Version 1.4.0.4 verbessert die Bedienoberfläche und ergänzt diese integrierte Hilfe; sie ändert die bestehende Archivierungslogik nicht."));
+Version 1.4.0.5 verbessert die Bedienoberfläche und ergänzt diese integrierte Hilfe; sie ändert die bestehende Archivierungslogik nicht."));
             var outer=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=2,RowCount=2,Padding=new Padding(15)};
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,285));
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));

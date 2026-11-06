@@ -350,6 +350,22 @@ def locked(root):
         path.unlink(missing_ok=True)
 
 
+
+def safe_account_label(account):
+    """Readable, bounded Windows-safe account component. Does not alter manifest identity."""
+    raw = account.get('user')
+    if not isinstance(raw, str) or not raw.strip():
+        raise ArchiveError('Keine gueltige E-Mail-Kontoangabe vorhanden.')
+    raw = raw.strip()
+    value = re.sub(r'[^A-Za-z0-9@.+_-]', '_', raw)
+    value = re.sub(r'_+', '_', value).strip('._ ')
+    if not value:
+        value = 'Konto'
+    if len(value) > 62:
+        value = value[:50].rstrip('._ ') + '_' + hashlib.sha256(raw.encode('utf-8')).hexdigest()[:10]
+    return value
+
+
 def archive(client, account, cutoff, destination, expected_plan=None, cancel=None, date_mode='internal'):
     plan = snapshot(client, account, cutoff, cancel, date_mode=date_mode)
     if expected_plan and plan['plan_id'] != expected_plan:
@@ -361,8 +377,10 @@ def archive(client, account, cutoff, destination, expected_plan=None, cancel=Non
     if shutil.disk_usage(dest).free < plan['bytes'] + RESERVE:
         raise ArchiveError('Nicht genug Speicher fuer vollstaendige Nachrichten und Sicherheitsreserve.')
     archive_id = uuid.uuid4().hex
-    name = 'EmailArchiv von %s bis %s_%s' % (plan['first'].replace('-', '.'), plan['last'].replace('-', '.'), archive_id[:8])
+    name = 'EmailArchiv_%s_von_%s_bis_%s_%s' % (safe_account_label(account), plan['first'].replace('-', '.'), plan['last'].replace('-', '.'), archive_id[:8])
     root = dest / name
+    if os.name == 'nt' and len(str(root)) > 230:
+        raise ArchiveError('Der Zielpfad ist fuer Windows zu lang. Bitte einen kuerzeren Zielordner waehlen.')
     root.mkdir(exist_ok=False)
     manifest = dict(format=FORMAT, archive_id=archive_id, account_key=plan['account_key'],
                     cutoff=cutoff, date_mode=plan['date_mode'], first=plan['first'], last=plan['last'], expected_count=plan['count'],

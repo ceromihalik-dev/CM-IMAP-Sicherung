@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0.5 – Dashboard, Konten und Archivordner (Vorabversion)
+
+- Dashboard komplett neu angeordnet: vier gleichmäßig verteilte Statuskarten in einer Zeile, kompakterer Kopfbereich und klare Inhaltsstruktur.
+- Fünf Navigationsgruppen sind beim Programmstart eingeklappt.
+- Immer verfügbare zentrale Aktionsleiste: alle Konten sichern, Auswahl sichern, E-Mail-Archiv, aktualisieren, abbrechen.
+- Dauerhaft sichtbares Menü mit **Hilfe → Benutzeranleitung**; F1 und Hilfe im Archiv bleiben erhalten.
+- Kontenliste mit Suche nach Konto, Adresse oder IMAP-Host, Filtern nach aktiven Konten, letzten Fehlern und lokal 0 B; sortierbare Spalten.
+- Redundante Benutzer-Spalte wird bei identischen Konto-/Benutzernamen ausgeblendet; bei Bedarf über Ansicht einblendbar.
+- Fachlich korrekt beschriftete Statusanzeige: Verbindungstest ist kein Backup. 0-B-Konten werden als Hinweis hervorgehoben.
+- Kleines, aufklappbares Protokoll im unteren Bereich statt einer großen leeren Fläche; automatisches Öffnen bei laufendem Vorgang oder Fehler.
+- Prozentbalken größer und lesbarer; animiertes Aktivitätsband ohne erfundene Fortschrittswerte.
+- Altersarchive enthalten künftig das E-Mail-Konto im Windows-sicheren Exportordnernamen; bestehende Archive bleiben gültig.
+- Benutzerhandbuch, integrierte Hilfe und automatisierte GUI-/Python-Sicherheitstests aktualisiert.
+
+**Hinweis:** Archivbereinigung weiterhin nur nach ausdrücklicher Bestätigung. Keine zusätzlichen Server-Löschfunktionen.
+
 ## 1.4.0.4 – Datumswahl für E-Mail-Archive (Vorabversion)
 
 - Einstellbare Datumsgrundlage: internes IMAP-Datum, E-Mail-Datum oder konservativer Vergleich beider Werte.

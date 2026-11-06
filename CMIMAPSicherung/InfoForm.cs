@@ -93,9 +93,9 @@ namespace CMIMAPSicherung
             try
             {
                 Version v = Assembly.GetExecutingAssembly().GetName().Version;
-                return v == null ? "1.4.0.1" : v.ToString();
+                return v == null ? "1.4.0.5" : v.ToString();
             }
-            catch { return "1.4.0.1"; }
+            catch { return "1.4.0.5"; }
         }
 
         private void LoadLogo()
