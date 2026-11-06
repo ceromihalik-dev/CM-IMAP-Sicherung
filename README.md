@@ -1,110 +1,89 @@
-<p align="center">
-  <img src="CMIMAPSicherung/Resources/cm_logo.png" alt="CM IMAP Sicherung" width="180">
-</p>
+<p align="center"><img src="CMIMAPSicherung/Resources/cm_logo.png" alt="CM-Logo" width="140"></p>
 
 # CM IMAP Sicherung
 
-**CM IMAP Sicherung** ist eine Windows-Anwendung zur lokalen Sicherung, Prüfung, Archivierung, Anzeige und Wiederherstellung von IMAP-Postfächern.
+Windows-Anwendung für IMAP-Sicherungen, Prüfung, ZIP-Archive, Wiederherstellung und MBOX-Anzeige.
 
-Aktueller Stand: **1.4.0.1**  
-Ersteller: **C.Mihalik**
+**Aktueller Entwicklungs-/Vorabstand: 1.4.0.2** · **Ersteller: C.Mihalik**
 
-## Funktionen
+## Direkt starten
 
-- Mehrere IMAP-Konten verwalten und sichern
-- automatische Erkennung typischer IMAP-Server und Ports
-- inkrementelle Sicherung über `imapbackup3`
-- Large-Mailbox-Modus für große Postfächer
-- Fortschrittsanzeige, Logs und Sicherungshistorie
-- Windows-Tray-Betrieb und zeitgesteuerte Sicherung
-- Wiederholungsversuche bei Fehlern
-- SHA-256-Backup-Prüfung
-- AES-256-verschlüsselte ZIP-Archive
-- Speicherplatzüberwachung und Warnungen
-- IMAP-Wiederherstellung aus MBOX bzw. verschlüsselten Archiven
-- integrierter MBOX-Viewer mit Suche, Anhängen, EML-Export und Druck
-- DPAPI-geschützte Kennwortspeicherung unter Windows
-
-## Sicherheit
-
-Das Repository enthält **keine E-Mail-Konten, Kennwörter oder realen MBOX-Sicherungen**. Zugangsdaten werden von der Anwendung lokal und benutzergebunden über Windows DPAPI gespeichert.
-
-> **Wichtig:** Niemals `.cred`, `.mbox`, reale E-Mail-Backups oder lokale `config.xml`-Dateien committen. Die `.gitignore` schließt diese Dateien bereits aus.
-
-## Voraussetzungen
-
-- Windows 10 oder Windows 11
-- .NET Framework 4.8 bzw. ein passender C#-Build-Toolchain
-- Python 3
-- Python-Paket `imapbackup3`
-- optional `pyzipper` für AES-verschlüsselte ZIP-Archive
-
-Fehlende Python-Pakete können von der Anwendung teilweise automatisch installiert werden.
-
-## Build
-
-Einfach unter Windows ausführen:
-
-```bat
-Build-Release.bat
-```
-
-Alternativ kann die Lösung `CM-IMAP-Sicherung.sln` in Visual Studio geöffnet werden.
-
-Die Release-EXE wird im Release-Ausgabeordner des Projekts erzeugt.
-
-## Schnellstart
-
-1. Anwendung bauen und starten.
-2. **Konto +** wählen.
-3. E-Mail-Adresse eingeben.
-4. **IMAP automatisch erkennen** verwenden oder Server/Port manuell setzen.
-5. Kennwort hinterlegen.
-6. **Verbindung testen**.
-7. Sicherungsziel wählen und Backup starten.
-
-## Große Postfächer
-
-Für größere Postfächer, z. B. 10 GB und mehr, stehen erhöhte IMAP-Timeouts, Speicherwarnungen, ZIP64 und weitere Large-Mailbox-Optimierungen zur Verfügung. Als Backupziel wird NTFS oder ein anderes Dateisystem ohne 4-GB-Einzeldateigrenze empfohlen.
-
-## MBOX Viewer
-
-Der integrierte Viewer arbeitet lesend auf den Backup-Dateien. Unterstützt werden unter anderem:
-
-- Ordner-/MBOX-Navigation
-- Nachrichtenliste
-- Volltextsuche
-- Vorschau von Text- und HTML-Mails
-- Anhänge speichern
-- Nachricht als EML exportieren
-- Druck / PDF über den Windows-Druckdialog
-
-## Wiederherstellung
-
-Backups können wieder in ein IMAP-Konto importiert werden. Die Wiederherstellung ist bewusst nicht destruktiv; vorhandene Nachrichten werden nicht automatisch gelöscht. Bei mehrfachen Imports können daher Duplikate entstehen.
-
-## Projektstruktur
+Das Windows-Paket aus dem Bereich **Releases** vollständig entpacken und **`CM IMAP Sicherung.exe`** doppelklicken. Nicht das automatisch angebotene „Source code“-Archiv verwenden, wenn eine fertige Anwendung gewünscht ist.
 
 ```text
-CM-IMAP-Sicherung.sln
-CMIMAPSicherung/
-  MainForm.cs
-  AccountEditForm.cs
-  ImapAutoDetect.cs
-  ImapBackupCompatibility.cs
-  MboxViewerForm.cs
-  RestoreForm.cs
-  BackupTools.cs
-  SettingsForm.cs
-  SchedulerForm.cs
-  Resources/
-Build-Release.bat
+CM-IMAP-Sicherung/
+  CM IMAP Sicherung.exe
+  py.exe
+  runtime/
+  README.md
+  RELEASE-NOTES.md
+  ARCHIVIERUNG.md
+  BUILD-INFO.json
+  FILES.sha256
 ```
 
-## Datenschutz
+`py.exe` und `runtime` müssen neben der Anwendung bleiben. Das ist ein startfertiges Programmpaket, keine einzelne selbstentpackende EXE. Python und die benötigten Backup-/ZIP-Pakete sind mitgeliefert; keine separate Python-Installation und kein eigener Build erforderlich. Erforderlich sind **Windows 10/11 x64 und .NET Framework 4.8**. Die Anwendung ist **nicht codesigniert**.
 
-Alle Sicherungen werden lokal in das vom Benutzer gewählte Verzeichnis geschrieben. Vor einer Veröffentlichung eigener Forks sollten lokale Kontodaten, Protokolle und Backup-Dateien auf persönliche Informationen geprüft werden.
+## Oberfläche
+
+Dunkles, an VS Code orientiertes Farbschema mit Emoji-/Symbolbeschriftungen. Die Aktionen sind links in aufklappbare Gruppen aufgeteilt:
+
+- **Sicherung:** alle Konten, ausgewähltes Konto, Abbrechen.
+- **Archiv & Ansicht:** E-Mail-Archiv, bisherige Backup-Wiederherstellung, MBOX Viewer, Backup-Ordner.
+- **Konten:** Hinzufügen, Bearbeiten, Verbindungstest, Kennwort, Entfernen.
+- **Verwaltung:** Prüfung/ZIP, Zeitplan, Konto-/Gesamthistorie, Protokolle, Einstellungen.
+- **Projekt:** Info und freiwillige Unterstützung.
+
+Die Darstellung der Emoji kann je nach Windows-Version und Schriftart farbig oder einfarbig ausfallen.
+
+## E-Mail-Archiv und Postfachspeicher
+
+Die neue Funktion archiviert Nachrichten **vor einem einstellbaren Stichtag**, standardmäßig älter als zehn Kalenderjahre. Maßgeblich ist das IMAP-Eingangsdatum `INTERNALDATE`, nicht der möglicherweise abweichende `Date`-Header. Der Stichtag selbst ist ausgeschlossen.
+
+1. Konto auswählen und **Vorschau** ausführen: Anzahl, Datenmenge und tatsächlicher Zeitraum.
+2. **Archiv erstellen**: vollständige EML-Dateien inklusive Anhängen, Ordnerzuordnung und Prüfnachweis. Der Archivordner heißt beispielsweise `EmailArchiv von 2004.02.01 bis 2015.12.31_<Kennung>`.
+3. **Archiv prüfen**: jede Nachricht wird erneut gelesen und mit ihrem SHA-256-Wert verglichen.
+4. Eine zusätzliche, geprüfte Kopie auf einem anderen Datenträger anlegen.
+5. Erst bei Bedarf **Postfach bereinigen** wählen und das konkrete Konto ausdrücklich bestätigen.
+
+**Archiv erstellen löscht nichts.** Nur die getrennte Bereinigung entfernt exakt die geprüften Nachrichten vom Mailserver. Sie ist an das Quellkonto, die Ordner-UIDVALIDITY und den Prüfnachweis gebunden. Vor jeder Entfernung werden zusätzlich die Originalbytes vom Server mit dem Archiv verglichen. Ohne gezieltes `UID EXPUNGE` bleibt die Bereinigung gesperrt. Fremde Löschmarkierungen werden nicht pauschal ausgeführt.
+
+Die Bereinigung verkleinert **keine bereits vorhandenen lokalen MBOX-Sicherungen**. Lokale Archivdateien benötigen zusätzlichen Speicher. Serverregeln, Labels, Aufbewahrung und weitere Kopien können beeinflussen, wie viel Serverquota tatsächlich freigegeben wird.
+
+Das neue Archiv verwendet **EML + `manifest.json`** und ist selbst **nicht verschlüsselt**. Es gehört auf einen geschützten bzw. verschlüsselten Datenträger. Der bisherige MBOX-Viewer liest MBOX-Dateien; die neuen EML-Dateien können mit einem geeigneten Mailprogramm geöffnet und über den Archivdialog wieder in neue IMAP-Ordner importiert werden. Die ZIP-Funktion für bisherige Kontosicherungen bleibt separat bestehen.
+
+Details: [Archivierung und Schutzmaßnahmen](docs/ARCHIVIERUNG.md).
+
+## Bestehende Funktionen
+
+Mehrkonten-Backup über `imapbackup3`, IMAP-Erkennung mit manueller Korrektur, Fortschritt, Wiederholungsversuche, Zeitplan, Tray, Historien, Speicherwarnung, SHA-256-Dateiprüfung, AES-256-ZIP/ZIP64, MBOX-Wiederherstellung und MBOX-Viewer mit Suche, Anhang-/EML-Export und Druck.
+
+Eine Servererkennung ist keine erfolgreiche Anmeldung. OAuth-Anmeldung für Anbieter, die sie zwingend verlangen, ist in dieser Fassung nicht implementiert. Gespeicherte Kennwörter bzw. ein unterstütztes App-Kennwort werden benötigt.
+
+## Einstellungen und Datenschutz
+
+Vorhandene Einstellungen werden weiterhin aus `%APPDATA%\IMAP-Backup-App` gelesen; gespeicherte Kennwörter liegen Windows-benutzergebunden unter `%LOCALAPPDATA%\IMAP-Backup-Secrets`. Das Windows-ZIP enthält keine Kontokonfiguration oder privaten Maildaten. Der Erststart auf einem anderen PC übernimmt nicht automatisch die Zugangsdaten des Entwicklungs-PCs.
+
+Die neue Archivfunktion übergibt das entschlüsselte Kennwort ausschließlich über die Standardeingabe an ihren lokalen Prozess. Die bisherigen Backup-/ZIP-/Restore-Routinen verwenden teilweise kurzzeitig entschlüsselte temporäre Kennwortdateien. DPAPI schützt die gespeicherten Kennwörter, ist aber kein Schutz vor Schadsoftware im bereits angemeldeten Benutzerkonto.
+
+Protokolle, Archive und Mailinhalte können personenbezogene Daten enthalten und gehören nicht ins öffentliche Repository. `.gitignore` ist lediglich ein zusätzlicher Schutz; vor jeder Veröffentlichung müssen die tatsächlich enthaltenen Dateien geprüft werden.
+
+## Unterstützung
+
+**❤️ Projekt unterstützen** ist freiwillig; alle Funktionen bleiben unabhängig davon verfügbar. In diesem Paket fehlt noch der eindeutig bestätigte öffentliche PayPal-Hosted-Button-Link. Deshalb öffnet der Button keine erfundene Zahlungsadresse. Es werden keine Bank- oder PayPal-Zugangsdaten benötigt.
+
+## Prüfumfang / Vorabversion
+
+Der CI-Workflow führt 29 Offline-Sicherheitstests mit simulierten Postfächern aus, kompiliert die Windows-EXE, prüft die mitgelieferte Python-Laufzeit und öffnet/rendert Haupt- und Archivfenster. Die Testprotokolle und Screenshots sind als separate QA-Artefakte verfügbar.
+
+Ein echter End-to-End-Test mit einem 10-GB-Postfach und verschiedenen IMAP-Anbietern ist **nicht** erfolgt. Die neue Archivbereinigung daher zuerst mit einem separaten Testkonto erproben. Der Release wird zunächst als **Vorabversion** veröffentlicht; Version 1.4.0.1 bleibt unverändert.
+
+## Selbst bauen
+
+`Build-Release.bat` erzeugt die Anwendung und den Python-Launcher. Für das vollständige Windows-Paket anschließend `tools/Package-Windows.ps1` ausführen. Der Paket-Build benötigt eine Python-Installation und Internetzugang; der ausgelieferte Anwender benötigt beides für die lokale Anzeige nicht. Online-Sicherung/-Wiederherstellung benötigen natürlich eine Verbindung zum Mailserver.
+
+`BUILD-INFO.json` dokumentiert Versions- und Quellstände. `FILES.sha256` enthält die Paketdateiprüfsummen; neben dem ZIP liegt dessen SHA-256-Prüfsumme. Hinweise zu mitgelieferten Lizenzen: [THIRD-PARTY.md](docs/THIRD-PARTY.md).
 
 ## Lizenz
 
-Für dieses Repository ist derzeit **keine Open-Source-Lizenz festgelegt**. Ohne separate Lizenz bleiben die Rechte beim Urheber. Wenn das Projekt ausdrücklich als Open Source veröffentlicht werden soll, sollte vorab eine passende Lizenz wie MIT, Apache-2.0 oder GPL-3.0 ausgewählt werden.
+Für den eigenen CM-IMAP-Sicherung-Quellcode ist weiterhin keine Open-Source-Lizenz festgelegt. Mitgelieferte Drittanbieter-Lizenzen bleiben erhalten.

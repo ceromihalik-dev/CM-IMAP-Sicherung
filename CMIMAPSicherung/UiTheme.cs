@@ -21,13 +21,13 @@ namespace CMIMAPSicherung
         public static readonly Color DangerBack=Color.FromArgb(67,40,40);
         public static readonly Color LogBack=Color.FromArgb(24,24,24);
         public static readonly Color LogText=Color.Gainsboro;
-        public static void ApplyPrimary(Button b){b.FlatStyle=FlatStyle.Flat;b.FlatAppearance.BorderSize=0;b.BackColor=Primary;b.ForeColor=Color.White;b.Cursor=Cursors.Hand;}
-        public static void ApplySecondary(Button b){b.FlatStyle=FlatStyle.Flat;b.FlatAppearance.BorderColor=Border;b.FlatAppearance.BorderSize=1;b.BackColor=Surface;b.ForeColor=Text;b.Cursor=Cursors.Hand;}
+        public static void ApplyPrimary(Button b){b.UseMnemonic=false;b.FlatStyle=FlatStyle.Flat;b.FlatAppearance.BorderSize=0;b.BackColor=Primary;b.ForeColor=Color.White;b.Cursor=Cursors.Hand;}
+        public static void ApplySecondary(Button b){b.UseMnemonic=false;b.FlatStyle=FlatStyle.Flat;b.FlatAppearance.BorderColor=Border;b.FlatAppearance.BorderSize=1;b.BackColor=Surface;b.ForeColor=Text;b.Cursor=Cursors.Hand;}
         public static void ApplyDanger(Button b){ApplySecondary(b);b.BackColor=DangerBack;b.ForeColor=Danger;}
         public static void ApplyWarning(Button b){ApplySecondary(b);b.BackColor=WarningBack;b.ForeColor=Warning;}
         public static Panel CreateCard(string title,out Label valueLabel)
         {
-            var p=new Panel {Width=245,Height=70,BackColor=Surface,Margin=new Padding(0,0,10,0),Padding=new Padding(14,10,14,8),BorderStyle=BorderStyle.FixedSingle};
+            var p=new Panel {Width=245,Height=70,BackColor=Surface,Margin=new Padding(0,0,10,8),Padding=new Padding(14,10,14,8),BorderStyle=BorderStyle.FixedSingle};
             p.Controls.Add(new Label {Text=title,AutoSize=true,ForeColor=Muted,Font=new Font("Segoe UI",8.5F),Location=new Point(11,9)});
             valueLabel=new Label {Text="—",AutoSize=true,ForeColor=Text,Font=new Font("Segoe UI",11F,FontStyle.Bold),Location=new Point(11,33)};p.Controls.Add(valueLabel);return p;
         }
