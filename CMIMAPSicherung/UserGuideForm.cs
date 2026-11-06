@@ -24,7 +24,7 @@ namespace CMIMAPSicherung
             KeyPreview=true;
             chapters.Add(new KeyValuePair<string,string>("01 · Erste Schritte",
 @"CM IMAP SICHERUNG
-Benutzeranleitung · Version 1.4.0.3
+Benutzeranleitung · Version 1.4.0.4
 
 INSTALLATION UND START
 1. Das vollständige Windows-x64-ZIP aus dem GitHub-Release herunterladen.
@@ -77,7 +77,16 @@ Protokolle können Ordnernamen und technische Kontodaten enthalten. Vor dem Weit
 
 Archivformat: vollständige EML-Nachrichten einschließlich Anhängen, manifest.json und Prüfsummen. Der Ordner trägt den Datumsbereich der enthaltenen Nachrichten, beispielsweise EmailArchiv von 2008.01.01 bis 2016.11.05_<Kennung>.
 
-Maßgeblich ist INTERNALDATE, das Datum auf dem IMAP-Server, nicht immer das angezeigte Absenderdatum. Nachrichten am Stichtag werden nicht aufgenommen.
+DATUMSGRUNDLAGE:
+1. Internes Serverdatum (INTERNALDATE): bisherige Standardeinstellung.
+2. E-Mail-Datum (Date-Header): erfasst auch alte, später importierte Nachrichten, falls der Mail-Header ein gültiges Datum enthält.
+3. Beide vergleichen: nur Nachrichten auswählen, wenn BEIDE Datumsangaben vor dem Stichtag liegen. Widersprüche werden gezählt und nicht archiviert.
+
+Pro Ordner protokolliert die Vorschau ausgewählte und geprüfte Nachrichten. Gesamtwerte zeigen fehlende/ungültige E-Mail-Daten, Abweichungen von mehr als einem Tag und widersprüchliche Altersbewertungen.
+
+Fehlende, doppelte, unrealistische oder nicht eindeutig auswertbare Date-Header werden im Header- und Vergleichsmodus ausgeschlossen. Für den Vergleichsmodus gilt die vorsichtige Schnittmenge beider Auswahlen. Nachrichten AM Stichtag bleiben im Postfach. Ein neues Vorschau-Ergebnis wird notwendig, sobald die Datumsgrundlage geändert wird.
+
+Bei der Archivprüfung werden Date-Header gegen das EML und die gewählte Auswahlart geprüft. Beim späteren Löschen bleiben die bestehenden Konten-, UIDVALIDITY-, SHA-256- und UID-EXPUNGE-Schutzprüfungen in Kraft.
 
 POP3-Archive und lokale Thunderbird-Ordner werden NICHT über diese IMAP-Funktion gelesen. Ein Thunderbird-Ordner mit mailbox:// ist ein lokaler Ordner.
 
@@ -139,7 +148,7 @@ Projekt: https://github.com/ceromihalik-dev/CM-IMAP-Sicherung
 Die Unterstützung des Projekts ist freiwillig und beeinflusst keine Programmfunktionen. Es werden keine Bank- oder PayPal-Zugangsdaten in der Anwendung benötigt.
 
 Die Software einschließlich der neuen Archivbereinigung wurde noch nicht auf allen IMAP-Anbietern produktiv geprüft.
-Version 1.4.0.3 verbessert die Bedienoberfläche und ergänzt diese integrierte Hilfe; sie ändert die bestehende Archivierungslogik nicht."));
+Version 1.4.0.4 verbessert die Bedienoberfläche und ergänzt diese integrierte Hilfe; sie ändert die bestehende Archivierungslogik nicht."));
             var outer=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=2,RowCount=2,Padding=new Padding(15)};
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,285));
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));

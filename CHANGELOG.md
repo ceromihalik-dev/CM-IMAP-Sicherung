@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0.4 – Datumswahl für E-Mail-Archive (Vorabversion)
+
+- Einstellbare Datumsgrundlage: internes IMAP-Datum, E-Mail-Datum oder konservativer Vergleich beider Werte.
+- Alte, später importierte E-Mails können anhand ihres originalen Date-Headers ausgewählt werden.
+- Vorschau zeigt untersuchte Nachrichten, ungültige Date-Header, Abweichungen und widersprüchliche Altersbewertungen.
+- Im Vergleichsmodus nur Auswahl bei zwei gültigen und übereinstimmend älteren Datumswerten; Konflikte werden nicht automatisch archiviert.
+- Auswahlmodus und gewählte Datumswerte im Archivmanifest, mit erneuter Prüfung vor Bereinigung.
+- Keine automatische Löschung; sämtliche bestehenden UID-/Konto-/SHA-256-Sicherheitsprüfungen bleiben erhalten.
+- Erweiterte Offline-Sicherheitstests für fehlerhafte und widersprüchliche Datumsangaben.
+
 ## 1.4.0.3 – UI und Benutzeranleitung (Vorabversion)
 
 - Farbige, als eingebettete PNG-Grafiken dargestellte Emoji-Symbole in Navigation und Aktionsschaltflächen, unabhängig von der Emoji-Fontdarstellung in Windows.

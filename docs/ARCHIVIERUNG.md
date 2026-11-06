@@ -1,4 +1,4 @@
-# Alte E-Mails archivieren – Version 1.4.0.2
+# Alte E-Mails archivieren – Version 1.4.0.4
 
 ## Zweck und Format
 
@@ -48,3 +48,13 @@ Einzelne Nachrichten über 128 MiB können mit dieser Wiederherstellung nicht ho
 ## Teststand
 
 29 Offline-Tests mit simulierten IMAP-Antworten decken insbesondere Byteerhalt, Stichtag, Abbruch, beschädigte/fehlende Dateien, falsches Konto, UIDVALIDITY, fehlendes UIDPLUS, Serveränderungen und gezielte Löschung ohne Mitentfernen fremder Löschmarkierungen ab. Zusätzlich prüft CI Windows-Kompilierung, Runtime-Imports und Fensterstart/Rendering. Kein Live-Test mit einem realen 10-GB-Postfach oder sämtlichen IMAP-Anbietern. Deshalb zunächst Vorabversion und nur nach einem Test mit einem separaten Testkonto produktiv bereinigen.
+
+## Datumsmodi ab 1.4.0.4
+
+- **INTERNALDATE:** schnelle serverseitige BEFORE-Suche, bisheriges Standardverhalten.
+- **E-Mail-Datum (Date-Header):** Prüfung aller nicht gelöschten Nachrichten und ihres RFC-5322-Date-Headers. Alte importierte Nachrichten können so erkannt werden, auch wenn INTERNALDATE neuer ist. Fehlende, doppelte, ungültige oder unrealistisch zukünftige Header zählen als ausgeschlossen.
+- **Beide vergleichen:** eine Nachricht wird nur ausgewählt, wenn internes Datum **und** gültiges Headerdatum älter als der Stichtag sind. Widersprüchliche Altersbewertungen werden separat gezählt und ausgeschlossen. Unterschiede von mehr als einem Tag werden ausgewiesen. Bei zwei gültigen, alten Daten bleibt das interne Datum für die Sortierung und Ordnerbenennung maßgeblich.
+
+Der Stichtag selbst wird nicht archiviert. Das gesamte E-Mail-Datum muss einen eindeutig parsebaren Zeitzonenbezug besitzen. Für die fachliche Auswahl wird das jeweilige lokale Kalenderdatum der im IMAP-Eingangsdatum bzw. RFC-5322-Header genannten Zeitzone benutzt. Die Anzahl geprüfter Nachrichten und Warnungen erscheinen in der Vorschau.
+
+Das gewählte Verfahren und die ausgewählten Werte sind im Archivmanifest gespeichert. Bei Archivprüfung werden die EML-Dateien und ihre Header erneut gelesen, gegen Manifest und gewählten Modus geprüft und anschließend mit SHA-256 kontrolliert. Beim Löschvorgang gelten weiterhin Konto-, UIDVALIDITY-, Hash- und UID-EXPUNGE-Schutz; ein neu ausgewählter Modus im Fenster ändert bestehende Archive nicht. Die Header-/Vergleichsauswahl erfordert wegen des zusätzlichen Scans bei großen Postfächern mehr Zeit.

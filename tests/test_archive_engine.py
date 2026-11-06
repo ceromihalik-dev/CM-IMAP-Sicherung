@@ -1,4 +1,5 @@
 import contextlib
+import datetime as dt
 import importlib.util
 import io
 import json
@@ -45,12 +46,23 @@ class FakeImap:
         if cmd == 'SEARCH':
             if args[1] == 'UID':
                 return 'OK', [str(args[2]).encode() if int(args[2]) in self.messages else b'']
-            return 'OK', [b' '.join(str(uid).encode() for uid, m in self.messages.items()
-                                   if e.internal_date(m['date']).isoformat() < '2016-01-01' and '\\Deleted' not in m['flags'])]
+            if args[1] == 'BEFORE':
+                day = dt.datetime.strptime(args[2],'%d-%b-%Y').date().isoformat()
+                ids = [uid for uid, m in self.messages.items()
+                       if e.internal_date(m['date']).isoformat() < day and '\\Deleted' not in m['flags']]
+            else:
+                ids = [uid for uid, m in self.messages.items() if '\\Deleted' not in m['flags']]
+            return 'OK', [b' '.join(str(uid).encode() for uid in ids)]
         uid = int(args[0])
         if cmd == 'FETCH':
             if uid not in self.messages: return 'OK', [None]
             m = self.messages[uid]
+            if 'HEADER.FIELDS (DATE)' in args[1]:
+                header = m['raw'].split(b'\r\n\r\n',1)[0]
+                lines = header.split(b'\r\n')
+                date_lines = [line for line in lines if line.lower().startswith(b'date:')]
+                value = b'\r\n'.join(date_lines) + b'\r\n\r\n'
+                return 'OK', [(('1 (UID %d BODY[HEADER.FIELDS (DATE)] {%d}' % (uid,len(value))).encode(),value),b')']
             if 'BODY.PEEK' not in args[1]:
                 return 'OK', [('1 (UID %d RFC822.SIZE %d INTERNALDATE "%s" FLAGS (%s))' %
                                (uid, len(m['raw']), m['date'], ' '.join(m['flags']))).encode()]
@@ -193,5 +205,95 @@ class Tests(unittest.TestCase):
             cls.return_value.starttls.side_effect=RuntimeError('TLS failed')
             with self.assertRaises(RuntimeError): e.connect(dict(ACCOUNT,port=143),'not-a-real-password')
             cls.return_value.login.assert_not_called()
+
+
+    def change_raw_date(self, uid, value):
+        """Replace just RFC 5322 Date header while preserving original message body."""
+        raw = self.client.messages[uid]['raw']
+        self.client.messages[uid]['raw'] = b'Date: ' + value.encode('ascii') + b'\r\n' + raw
+    def test_header_mode_selects_imported_old_mail(self):
+        self.change_raw_date(7, 'Mon, 15 Mar 2010 08:30:00 +0100')
+        plan=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='header')
+        self.assertEqual(plan['count'],1)
+        self.assertEqual(plan['folders'][0]['messages'][0]['uid'],7)
+        self.assertEqual(plan['first'],'2010-03-15')
+        self.assertGreater(plan['invalid_dates'],0)
+        self.assertFalse(self.client.writes)
+    def test_compare_mode_excludes_conflicting_old_header(self):
+        self.change_raw_date(7,'Mon, 15 Mar 2010 08:30:00 +0100')
+        plan=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='compare')
+        self.assertEqual(plan['count'],0)
+        self.assertEqual(plan['conflicts'],1)
+        self.assertFalse(self.client.writes)
+    def test_compare_mode_keeps_old_only_when_both_old(self):
+        self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
+        plan=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='compare')
+        self.assertEqual(plan['count'],1)
+        self.assertEqual(plan['disagreements'],1)
+        self.assertEqual(plan['first'],'2000-01-10')
+    def test_header_date_missing_or_invalid_excluded(self):
+        plan=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='header')
+        self.assertEqual(plan['count'],0)
+        self.assertEqual(plan['invalid_dates'],3)
+        self.assertFalse(self.client.writes)
+    def test_invalid_future_date_excluded(self):
+        self.change_raw_date(5,'Mon, 15 Mar 2099 08:30:00 +0100')
+        plan=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='header')
+        self.assertEqual(plan['count'],0)
+        self.assertEqual(plan['invalid_dates'],3)
+    def test_duplicate_date_header_excluded(self):
+        self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
+        self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
+        plan=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='header')
+        self.assertEqual(plan['count'],0)
+        self.assertEqual(plan['invalid_dates'],3)
+    def test_header_date_on_cutoff_not_older(self):
+        self.change_raw_date(5,'Fri, 01 Jan 2016 00:00:00 +0100')
+        plan=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='header')
+        self.assertEqual(plan['count'],0)
+    def test_header_archive_and_exact_cleanup(self):
+        self.change_raw_date(7,'Mon, 15 Mar 2010 08:30:00 +0100')
+        p=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='header')
+        root=e.archive(self.client,ACCOUNT,'2016-01-01',self.root,p['plan_id'],date_mode='header')
+        self.assertEqual(e.load_manifest(root)['date_mode'],'header')
+        self.assertEqual(e.verify(root)['count'],1)
+        self.assertFalse(self.client.writes)
+        self.clean(root)
+        self.assertEqual(set(self.client.messages),{5,6,8})
+        self.assertIn(('EXPUNGE',7),self.client.writes)
+    def test_compare_archive_verified(self):
+        self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
+        root=e.archive(self.client,ACCOUNT,'2016-01-01',self.root,date_mode='compare')
+        self.assertEqual(e.verify(root)['count'],1)
+        self.assertFalse(self.client.writes)
+    def test_header_change_after_preview_blocks_archive(self):
+        self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
+        p=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='header')
+        self.client.messages[5]['raw']=self.client.messages[5]['raw'].replace(b'1999',b'2015')
+        with self.assertRaises(e.ArchiveError):
+            e.archive(self.client,ACCOUNT,'2016-01-01',self.root,p['plan_id'],date_mode='header')
+        self.assertFalse(list(self.root.iterdir()))
+    def test_wrong_mode_plan_id_blocks_archive(self):
+        p=e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='internal')
+        with self.assertRaises(e.ArchiveError):
+            e.archive(self.client,ACCOUNT,'2016-01-01',self.root,p['plan_id'],date_mode='header')
+        self.assertFalse(list(self.root.iterdir()))
+    def test_header_archive_tamper_blocks_cleanup(self):
+        self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
+        root=e.archive(self.client,ACCOUNT,'2016-01-01',self.root,date_mode='header')
+        self.rewrite(root,lambda m:m['folders'][0]['messages'][0].update(header_date='2002-01-01'))
+        with self.assertRaises(e.ArchiveError):e.verify(root)
+        self.assertFalse(self.client.writes)
+    def test_bad_mode_rejected_and_no_writes(self):
+        with self.assertRaises(e.ArchiveError):
+            e.snapshot(self.client,ACCOUNT,'2016-01-01',date_mode='unknown')
+        self.assertFalse(self.client.writes)
+    def test_parse_date_timezone_and_missing_tz(self):
+        self.assertEqual(e.parse_header_date(b'Date: Sun, 10 Jan 1999 23:59:59 -1200\r\n\r\n'),'1999-01-10')
+        self.assertIsNone(e.parse_header_date(b'Date: 10 Jan 1999 23:59\r\n\r\n'))
+    def test_eml_header_is_bounded(self):
+        self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
+        root=e.archive(self.client,ACCOUNT,'2016-01-01',self.root,date_mode='header')
+        self.assertEqual(e.verify(root)['count'],1)
 
 if __name__=='__main__': unittest.main(verbosity=2)

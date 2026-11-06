@@ -4,7 +4,7 @@
 
 Windows-Anwendung für IMAP-Sicherungen, Prüfung, ZIP-Archive, Wiederherstellung und MBOX-Anzeige.
 
-**Aktueller Entwicklungs-/Vorabstand: 1.4.0.3** · **Ersteller: C.Mihalik**
+**Aktueller Entwicklungs-/Vorabstand: 1.4.0.4** · **Ersteller: C.Mihalik**
 
 ## Direkt starten
 
@@ -42,7 +42,7 @@ Die Darstellung der Emoji kann je nach Windows-Version und Schriftart farbig ode
 
 ## E-Mail-Archiv und Postfachspeicher
 
-Die neue Funktion archiviert Nachrichten **vor einem einstellbaren Stichtag**, standardmäßig älter als zehn Kalenderjahre. Maßgeblich ist das IMAP-Eingangsdatum `INTERNALDATE`, nicht der möglicherweise abweichende `Date`-Header. Der Stichtag selbst ist ausgeschlossen.
+Die neue Funktion archiviert Nachrichten **vor einem einstellbaren Stichtag**, standardmäßig älter als zehn Kalenderjahre. Als **Datumsgrundlage** stehen drei Varianten bereit: **IMAP-INTERNALDATE (Standard)**, **E-Mail-Datum im Date-Header** und **konservativer Vergleich beider Werte**. Im Vergleichsmodus werden Nachrichten mit widersprüchlicher Altersbewertung ausgeschlossen. Fehlende oder ungültige Header-Daten und deutliche Datumsabweichungen erscheinen in der Vorschau. Der Stichtag selbst ist ausgeschlossen.
 
 1. Konto auswählen und **Vorschau** ausführen: Anzahl, Datenmenge und tatsächlicher Zeitraum.
 2. **Archiv erstellen**: vollständige EML-Dateien inklusive Anhängen, Ordnerzuordnung und Prüfnachweis. Der Archivordner heißt beispielsweise `EmailArchiv von 2004.02.01 bis 2015.12.31_<Kennung>`.

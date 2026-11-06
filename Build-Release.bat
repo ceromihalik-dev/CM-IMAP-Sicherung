@@ -24,7 +24,7 @@ if errorlevel 1 goto :FAIL
 "%CSC%" /nologo /target:exe /platform:x64 /optimize+ /codepage:65001 /out:"CMIMAPSicherung\bin\Release\py.exe" /reference:System.dll /reference:System.Core.dll tools\PythonLauncher.cs
 if errorlevel 1 goto :FAIL
 if not exist "CMIMAPSicherung\bin\Release\CM IMAP Sicherung.exe" goto :FAIL
-echo [OK] CM IMAP Sicherung 1.4.0.3 erfolgreich kompiliert.
+echo [OK] CM IMAP Sicherung 1.4.0.4 erfolgreich kompiliert.
 echo Fuer das portable Windows-Paket: tools\Package-Windows.ps1 verwenden.
 if not defined NOPAUSE pause
 exit /b 0
