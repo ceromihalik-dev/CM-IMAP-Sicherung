@@ -179,7 +179,7 @@ Version 1.4.0.3 verbessert die Bedienoberfläche und ergänzt diese integrierte 
                     topics.Items.Add(c.Key);
             topics.EndUpdate();
             count.Text=topics.Items.Count+" von "+chapters.Count+" Kapiteln";
-            if(topics.Items.Count>0)topics.SelectedIndex=Math.Max(0,topics.Items.IndexOf(old));
+            if(topics.Items.Count>0)topics.SelectedIndex=old==null?0:Math.Max(0,topics.Items.IndexOf(old));
             else body.Text="Keine Treffer. Anderen Suchbegriff verwenden.";
         }
         private void UpdateChapter()

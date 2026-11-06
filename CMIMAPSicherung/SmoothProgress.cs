@@ -44,10 +44,15 @@ namespace CMIMAPSicherung
                 row=table.GetRow(source);col=table.GetColumn(source);
                 rowSpan=table.GetRowSpan(source);colSpan=table.GetColumnSpan(source);
             }
+            // Capture placement BEFORE reparenting the old model into the new control.
+            // Otherwise Dock is reset to None and the painted bars disappear.
+            DockStyle docking=source.Dock;
+            AnchorStyles anchoring=source.Anchor;
+            Padding margin=source.Margin;
+            int height=Math.Max(22,source.Height);
             var box=new SmoothProgress(source) {
-                Dock=source.Dock,Anchor=source.Anchor,
-                Margin=source.Margin,Height=Math.Max(18,source.Height),
-                MinimumSize=new Size(0,18)
+                Dock=docking,Anchor=anchoring,Margin=margin,Height=height,
+                MinimumSize=new Size(0,22)
             };
             parent.Controls.Remove(source);
             if(table!=null)
