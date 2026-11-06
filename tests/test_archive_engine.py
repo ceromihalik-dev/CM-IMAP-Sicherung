@@ -105,7 +105,7 @@ class Tests(unittest.TestCase):
         root=self.create(); m=e.load_manifest(root); p=root/m['folders'][0]['messages'][0]['path']
         self.assertEqual(p.read_bytes(),self.client.body); self.assertFalse(self.client.writes)
     def test_range_filename(self):
-        self.assertTrue(self.create().name.startswith('EmailArchiv von 2000.01.10 bis 2000.01.10_'))
+        self.assertTrue(self.create().name.startswith('EmailArchiv_test@example.invalid_von_2000.01.10_bis_2000.01.10_'))
     def test_verify_detects_corruption(self):
         root=self.create(); next(root.rglob('*.eml')).write_bytes(b'bad')
         with self.assertRaises(e.ArchiveError): self.clean(root)
@@ -295,5 +295,30 @@ class Tests(unittest.TestCase):
         self.change_raw_date(5,'Sun, 10 Jan 1999 10:10:00 +0100')
         root=e.archive(self.client,ACCOUNT,'2016-01-01',self.root,date_mode='header')
         self.assertEqual(e.verify(root)['count'],1)
+
+    def test_account_component_is_windows_safe(self):
+        name=e.safe_account_label(dict(user='name<unsafe>:path\\\\user?*@example.invalid'))
+        self.assertNotIn('/',name)
+        for forbidden in '<>:/\\\\|?*':self.assertNotIn(forbidden,name)
+        self.assertLessEqual(len(name),62)
+    def test_long_account_part_has_hash_and_bounded_length(self):
+        long_mail='test.'*30+'@example.invalid'
+        part=e.safe_account_label(dict(user=long_mail))
+        self.assertLessEqual(len(part),62)
+        self.assertRegex(part,r'_[a-f0-9]{10} unittest.main(verbosity=2)
+)
+    def test_distinct_archives_same_period_do_not_collide(self):
+        first=self.create(); second=self.create()
+        self.assertNotEqual(first,second)
+        self.assertTrue(first.is_dir() and second.is_dir())
+    def test_missing_account_label_blocks_creation(self):
+        with self.assertRaises(e.ArchiveError):
+            e.safe_account_label(dict(user=''))
+    def test_archive_existing_manifest_independent_of_folder_name(self):
+        archive=self.create()
+        renamed=archive.with_name('Altes-Archiv')
+        archive.rename(renamed)
+        self.assertEqual(e.verify(renamed)['count'],1)
+        self.assertFalse(self.client.writes)
 
 if __name__=='__main__': unittest.main(verbosity=2)

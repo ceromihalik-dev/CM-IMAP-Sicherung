@@ -13,11 +13,13 @@ namespace CMIMAPSicherung
     internal sealed class SmoothProgress : Control
     {
         private readonly ProgressBar model;
+        private readonly bool showPercent;
         private readonly Timer timer;
         private int phase;
-        public SmoothProgress(ProgressBar source)
+        public SmoothProgress(ProgressBar source, bool showPercent)
         {
             model=source;
+            this.showPercent=showPercent;
             DoubleBuffered=true;
             SetStyle(ControlStyles.AllPaintingInWmPaint|ControlStyles.UserPaint|
                 ControlStyles.OptimizedDoubleBuffer|ControlStyles.ResizeRedraw,true);
@@ -33,7 +35,7 @@ namespace CMIMAPSicherung
             timer.Tick+=delegate { if(!IsDisposed && Visible) {phase=(phase+3)%600;Invalidate();} };
             timer.Start();
         }
-        public static void Replace(ProgressBar source)
+        public static void Replace(ProgressBar source, bool showPercent=true)
         {
             if(source==null || source.Parent==null) return;
             var parent=source.Parent;
@@ -49,10 +51,10 @@ namespace CMIMAPSicherung
             DockStyle docking=source.Dock;
             AnchorStyles anchoring=source.Anchor;
             Padding margin=source.Margin;
-            int height=Math.Max(22,source.Height);
-            var box=new SmoothProgress(source) {
+            int height=Math.Max(28,source.Height);
+            var box=new SmoothProgress(source,showPercent) {
                 Dock=docking,Anchor=anchoring,Margin=margin,Height=height,
-                MinimumSize=new Size(0,22)
+                MinimumSize=new Size(0,28)
             };
             parent.Controls.Remove(source);
             if(table!=null)
@@ -129,11 +131,12 @@ namespace CMIMAPSicherung
                     g.Restore(state);
                 }
             }
-            if(!isBusy && Height>=25 && Width>70)
+            if(!isBusy && showPercent && model.Style!=ProgressBarStyle.Marquee && Height>=25 && Width>70)
             {
                 string label=(ratio*100).ToString("0")+" %";
-                TextRenderer.DrawText(g,label,new Font("Segoe UI",8F,FontStyle.Bold),track,
-                    Color.White,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+                using(Font f=new Font("Segoe UI",8F,FontStyle.Bold))
+                    TextRenderer.DrawText(g,label,f,track,
+                        Color.White,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
             }
         }
         protected override void Dispose(bool disposing)

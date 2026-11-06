@@ -4,7 +4,7 @@
 
 Windows-Anwendung für IMAP-Sicherungen, Prüfung, ZIP-Archive, Wiederherstellung und MBOX-Anzeige.
 
-**Aktueller Entwicklungs-/Vorabstand: 1.4.0.4** · **Ersteller: C.Mihalik**
+**Aktueller Entwicklungs-/Vorabstand: 1.4.0.5** · **Ersteller: C.Mihalik**
 
 ## Direkt starten
 
@@ -23,6 +23,12 @@ CM-IMAP-Sicherung/
 ```
 
 `py.exe` und `runtime` müssen neben der Anwendung bleiben. Das ist ein startfertiges Programmpaket, keine einzelne selbstentpackende EXE. Python und die benötigten Backup-/ZIP-Pakete sind mitgeliefert; keine separate Python-Installation und kein eigener Build erforderlich. Erforderlich sind **Windows 10/11 x64 und .NET Framework 4.8**. Die Anwendung ist **nicht codesigniert**.
+
+## Dashboard und Benutzeranleitung
+
+**Ab 1.4.0.5:** Einheitliches Vier-Karten-Dashboard, Start mit fünf eingeklappten Navigationsgruppen, zentrale Schnellsicherungs- und Archivaktionen, Such- und Filterbereich für Konten, erweiterbare Protokollkonsole, klar getrennte Angaben zu zuletzt protokollierten Vorgängen und lokal vorhandenen Daten. Ein grünes OK nach einem Verbindungstest gilt nicht als Nachweis einer erfolgreichen Sicherung. Die Benutzeranleitung ist auch dauerhaft im Menü **Hilfe → Benutzeranleitung** verfügbar.
+
+**Archivordner:** Neu angelegte Archive enthalten im Ordnernamen das betreffende Konto, den tatsächlichen Datumsbereich und eine eindeutige Kennung, z. B. `EmailArchiv_konto@beispiel.invalid_von_2005.01.01_bis_2016.11.05_ab12cd34`. Der lesbare Name ersetzt keine Kontobindung über das Manifest.
 
 ## Oberfläche und Benutzeranleitung
 

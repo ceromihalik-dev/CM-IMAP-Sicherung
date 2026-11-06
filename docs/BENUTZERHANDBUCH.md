@@ -1,6 +1,6 @@
 # CM IMAP Sicherung — Benutzerhandbuch
 
-**Version 1.4.0.4 · Windows 10/11 x64 · Ersteller C.Mihalik**
+**Version 1.4.0.5 · Windows 10/11 x64 · Ersteller C.Mihalik**
 
 Diese Anleitung ist sowohl als Datei im Release-Paket als auch **direkt in der Anwendung** über **Projekt → Benutzeranleitung** und **F1** verfügbar. In der Anwendung können alle Kapitel durchsucht werden; **Strg+F** öffnet die Suche. Die Hilfe funktioniert auch ohne Internet.
 
@@ -15,7 +15,13 @@ Die Programmdaten bzw. gespeicherten Konten liegen weiterhin im jeweiligen Windo
 
 ## 2. Das neue Hauptfenster
 
-Die Oberfläche ist in Arbeitsbereiche gegliedert. Die Navigation links ist aufklappbar. Die Buttons haben farbige Grafiksymbole; bei hoher Windows-Skalierung können die Farben anders wirken. Die Fortschrittsanzeigen sind animiert:
+Die Oberfläche ist in Arbeitsbereiche gegliedert. Alle fünf Navigationsgruppen links starten eingeklappt. Die wichtigsten Aktionen stehen zusätzlich in einer zentralen Aktionsleiste, unabhängig davon, welche Gruppe geöffnet ist.
+
+Im Hauptfenster ist die **Benutzeranleitung über Hilfe → Benutzeranleitung** jederzeit erreichbar. F1 und der Aufruf im Archivdialog bleiben erhalten.
+
+Die vier Dashboardkarten sind einheitlich nebeneinander. Die Kontentabelle lässt sich durchsuchen, nach aktiv/Fehler/0 B filtern und spaltenweise sortieren. Wenn Konto und Benutzer identisch sind, wird die redundante Spalte zunächst ausgeblendet und kann unter Ansicht wieder eingeblendet werden.
+
+Das Protokoll belegt im Ruhezustand nur eine kompakte Zeile. Beim Sicherungsbeginn bzw. bei einem Fehler öffnet es sich automatisch. Die Höhe kann zwischen zwei Größen umgeschaltet werden. Die Buttons haben farbige Grafiksymbole; bei hoher Windows-Skalierung können die Farben anders wirken. Die Fortschrittsanzeigen sind animiert:
 
 - **Gesamt:** Zahlenfortschritt der bereits abgearbeiteten Konten, mit Prozentwert, sofern Platz vorhanden ist.
 - **Aktuelles Konto:** animiertes Aktivitätsband ohne erfundene Prozentanzeige, da die Gesamtdatenmenge nicht immer zuverlässig bekannt ist.
@@ -111,4 +117,8 @@ Die freiwillige Unterstützung über das Projektmenü hat keinerlei Einfluss auf
 
 **GitHub-Projekt:** https://github.com/ceromihalik-dev/CM-IMAP-Sicherung
 
-**Hinweis zum Versionsstand:** 1.4.0.4 verbessert Design, Fortschrittsanzeigen und Benutzeranleitung; die bestehende IMAP-Archivierungs- und Bereinigungslogik wird nicht erweitert.
+**Hinweis zum Versionsstand:** 1.4.0.5 verbessert Design, Fortschrittsanzeigen und Benutzeranleitung; die bestehende IMAP-Archivierungs- und Bereinigungslogik wird nicht erweitert.
+
+### Exportordner mit Kontonamen (ab Version 1.4.0.5)
+
+Neu angelegte altersbasierte Archive tragen neben dem tatsächlichen Datumsbereich den Kontonamen, z. B. `EmailArchiv_konto@beispiel.invalid_von_2005.01.01_bis_2016.11.05_ab12cd34`. Ungültige Zeichen werden für Windows ersetzt, sehr lange Kontonamen gekürzt und eindeutig gekennzeichnet. Der Kontoname im Ordner dient nur der Orientierung; für die Bereinigungsfreigabe gelten weiterhin Manifest-Kontobindung, UIDVALIDITY und Prüfsumme. Bereits vorhandene Archive bleiben unverändert lesbar.

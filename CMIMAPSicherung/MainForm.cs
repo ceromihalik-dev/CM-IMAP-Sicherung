@@ -322,7 +322,7 @@ namespace CMIMAPSicherung
                 header.Controls.Add(headerText, 1, 0);
 
                 var versionBadge = new Label();
-                versionBadge.Text = "Version 1.4.0.1";
+                versionBadge.Text = "Version " + typeof(MainForm).Assembly.GetName().Version.ToString();
                 versionBadge.AutoSize = true;
                 versionBadge.ForeColor = Color.White;
                 versionBadge.BackColor = UiTheme.Primary;
