@@ -198,7 +198,7 @@ namespace CMIMAPSicherung
             if(old==null)throw new InvalidOperationException("Statuskarten wurden nicht gefunden.");
             var cards=old.Controls.Cast<Panel>().ToArray();
             if(cards.Length!=4)throw new InvalidOperationException("Es werden vier Statuskarten benötigt.");
-            var titles=new [] {"Konten","Letzte Vorgänge","Lokale Daten / frei","Zeitplan"};
+            var titles=new [] {"Konten","Vorgänge","Speicher","Zeitplan"};
             var colors=new [] {Color.FromArgb(80,160,245),Color.FromArgb(112,207,156),
                               Color.FromArgb(193,144,248),Color.FromArgb(245,189,107)};
             var deck=new TableLayoutPanel {
